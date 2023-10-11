@@ -7,7 +7,7 @@ A simple Django Rest Framework extension to add aggregation endpoints to your AP
 Key features:
 
 - count, sum, average, minimum, maximum, percentile &#10060; and percent&#10060;
-- grouping by multiple fields &#10060;
+- grouping by multiple fields
 - limiting the number of results &#10060;
 
 ---
@@ -104,7 +104,7 @@ You can group throughout multiple relations (ForeignKey & ManyToMany Fields) by 
 
         /store/aggregation/?aggregation=count&aggregationGroupBy=books__author__age
 
-To group by multiple fields, separate them with a comma. &#10060;
+To group by multiple fields, separate them with a comma.
 
         /book/aggregation/?aggregation=count&aggregationGroupBy=author,genre &
 

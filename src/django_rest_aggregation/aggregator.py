@@ -9,6 +9,9 @@ from django_rest_aggregation.enums import Aggregation
 def get_filtered_params(request):
     params = {key: value for key, value in request.query_params.items() if
               key in ["aggregation", "aggregationField", "aggregationGroupBy"]}
+
+    if params.get("aggregationGroupBy", None) is not None:
+        params["aggregationGroupBy"] = params["aggregationGroupBy"].split(",")
     return params
 
 
@@ -63,10 +66,10 @@ class Aggregator:
     def get_aggregated_queryset(self):
         self.validate_params()
 
-        if (group_by := self.params.get("aggregationGroupBy", "group")) == "group":
+        if (group_by := self.params.get("aggregationGroupBy", ["group"])) == ["group"]:
             self.queryset = self.queryset.annotate(group=models.Value("all", output_field=models.CharField()))
 
-        return self.queryset.values(group_by).annotate(**get_annotation(self.params))
+        return self.queryset.values(*group_by).annotate(**get_annotation(self.params))
 
     def validate_params(self):
 
@@ -96,6 +99,6 @@ class Aggregator:
                     raise ValidationError({"error": "'aggregationField' must be a number or date field"})
 
         # check if aggregationGroupBy is valid
-        if (aggregation_group_by := self.params.get("aggregationGroupBy", None)) is not None:
-            if not field_exists(aggregation_group_by, self.model):
+        for group_by in self.params.get("aggregationGroupBy", []):
+            if not field_exists(group_by, self.model):
                 raise ValidationError({"error": "'aggregationGroupBy' is not valid"})
