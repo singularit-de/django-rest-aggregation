@@ -1,13 +1,24 @@
-from django.db import models
+from enum import Enum
+
 from django.utils.translation import gettext_lazy as _
 
 
-class Aggregation(models.TextChoices):
-    AVERAGE = "average", _("average")
+class Aggregation(Enum):
     COUNT = "count", _("count")
-    DISTINCT = "distinct", _("distinct")
-    MAX = "maximum", _("maximum")
-    MIN = "minimum", _("minimum")
-    PERCENT = "percent", _("percent")
-    PERCENTILE = "percentile", _("percentile")
     SUM = "sum", _("sum")
+    AVERAGE = "average", _("average")
+    MIN = "minimum", _("minimum")
+    MAX = "maximum", _("maximum")
+
+    @classmethod
+    def get_all_aggregations(cls):
+        return {value for aggregation in cls for value in aggregation.value}
+
+    @classmethod
+    def get_field_required_aggregations(cls):
+        return {value for aggregation in cls for value in aggregation.value if aggregation != cls.COUNT}
+
+    @classmethod
+    def get_number_field_required_aggregations(cls):
+        return {value for aggregation in cls for value in aggregation.value
+                if aggregation not in {cls.COUNT or cls.MIN or cls.MAX}}
