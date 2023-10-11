@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=64.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django_rest_aggregation"
+version = "0.0.1"
+authors = [
+  { name="Simon Legtenborg", email="simon.legtenborg@singular-it.de" },
+]
+description = "A DRF mixin for aggregation endpoints"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+#Todo
+#[project.urls]
+#"Homepage" = "https://github.com/pypa/sampleproject"
+#"Bug Tracker" = "https://github.com/pypa/sampleproject/issues"

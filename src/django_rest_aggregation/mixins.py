@@ -1,10 +1,27 @@
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+from .aggregator import Aggregator
 from .helpers import get_aggregation
+from .serializers import AggregationSerializer
 
 
 class AggregationMixin:
+    @action(methods=['get'], detail=False, url_path='aggregation', url_name='aggregation')
+    def aggregation_new(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        aggregator = Aggregator(request)
+        queryset = aggregator.aggregate_queryset(queryset)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = AggregationSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = AggregationSerializer(queryset, many=True)
+        return Response(serializer.data)
+
     def aggregation(self, request):
         params = request.query_params
 

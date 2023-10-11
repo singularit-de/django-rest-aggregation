@@ -1,2 +1,2 @@
 djangorestframework~=3.12
-drf-complex-filter~=1.0
+django~=4.2.6

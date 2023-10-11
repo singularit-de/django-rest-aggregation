@@ -1,4 +1,4 @@
-from drf_aggregation.routers import AggregationRouter
+from src.drf_aggregation import AggregationRouter
 
 from .views import TestCaseViewSet
 

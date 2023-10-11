@@ -24,7 +24,6 @@ def get_aggregation(
         aggregation=aggregation,
         aggregation_field=aggregation_field,
         percentile=percentile,
-        additional_filter=additional_filter,
         queryset=queryset,
     )
     return aggregator.get_database_aggregation(
