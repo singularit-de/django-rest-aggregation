@@ -10,7 +10,8 @@ Key features:
 
 - count, sum, average, minimum, maximum, percentile &#10060; and percent&#10060;
 - grouping by multiple fields
-- limiting the number of results &#10060;
+- filtering and ordering
+- and limiting the number of results &#10060;
 
 ---
 
@@ -55,60 +56,66 @@ urlpatterns = [
 
 Get the aggregation results by sending a GET request to the aggregation endpoint.
 
-| URL                                                                                            | What it does                             |
-|------------------------------------------------------------------------------------------------|------------------------------------------|
-| ```/book/aggregation/?aggregation=count ```                                                    | Get the number of books                  |
-| ```/book/aggregation/?aggregation=maximum&aggregationField=price```                            | Get the most expensive book              |
-| ```/book/aggregation/?aggregation=average&aggregationField=rating&aggregationGroupBy=author``` | Get the average rating grouped by author |
-| &#10060;                                                                                       | &#10060;                                 |
+| URL                                                                                   | What it does                             |
+|---------------------------------------------------------------------------------------|------------------------------------------|
+| ```/book/aggregation/?aggregation=count ```                                           | Get the total number of books            |
+| ```/book/aggregation/?aggregation=maximum&aggregation_field=price```                  | Get the most expensive book              |
+| ```/book/aggregation/?aggregation=average&aggregation_field=rating&group_by=author``` | Get the average rating grouped by author |
+| &#10060;                                                                              | &#10060;                                 |
 
 ## Query parameter overview
-| query parameter    | description                        | example                         |
-|--------------------|------------------------------------|---------------------------------|
-| aggregation        | determines the type of aggregation | ```aggregation=sum```           |
-| aggregationField   | the field to aggregate on          | ```aggregationField=price```    |
-| aggregationGroupBy |                                    | ```aggregationGroupBy=author``` |
 
-
+| query parameter   | description                                | example                       |
+|-------------------|--------------------------------------------|-------------------------------|
+| aggregation       | determines the type of aggregation         | ```aggregation=sum```         |
+| aggregation_field | the field to aggregate on                  | ```aggregation_field=price``` |
+| group_by          | the field on which the queryset is grouped | ```group_by=author```         |
 
 ## Aggregations
-Available aggregations are:
- - count
- - sum
- - average
- - minimum
- - maximum
- - percentile &#10060;
- - percent &#10060;
 
-They can be used by adding the mandatory **aggregation** parameter to the request URL. 
+Available aggregations are:
+
+- count
+- sum
+- average
+- minimum
+- maximum
+- percentile &#10060;
+- percent &#10060;
+
+They can be used by adding the mandatory **aggregation** parameter to the request URL.
 
         /book/aggregation/?aggregation=count
 
-
 ### Aggregation Field
-The aggregation field is the field to aggregate on. 
-It can be used by adding the **aggregationField** parameter to the request URL. 
+
+The aggregation field is the field to aggregate on.
+It can be used by adding the **aggregationField** parameter to the request URL.
 This is a mandatory parameter for the **sum**, **average**, **minimum** and **maximum** aggregations.
+Both model fields and annotated fields can be used.
 
         /book/aggregation/?aggregation=sum&aggregationField=price
 
-You gan also use the double underscore notation to aggregate on a related field.
+You gan also use the double underscore notation to aggregate on a related model fields.
 
         /book/aggregation/?aggregation=sum&aggregationField=author__age
 
 ## Grouping
-Grouping is done by adding the **aggregationGroupBy** parameter to the request URL. 
 
-        /book/aggregation/?aggregation=count&aggregationGroupBy=author
+Grouping is done by adding the **group_by** parameter to the request URL.
+Again, model fields and annotated fields can be used.
 
-You can group throughout multiple relations (ForeignKey & ManyToMany Fields) by using the double underscore notation.
+        /book/aggregation/?aggregation=count&group_by=author
 
-        /store/aggregation/?aggregation=count&aggregationGroupBy=books__author__age
+You can group throughout multiple model relations (ForeignKey & ManyToMany Fields) by using the double underscore
+notation.
+
+        /store/aggregation/?aggregation=count&group_by=books__author__age
 
 To group by multiple fields, separate them with a comma.
 
-        /book/aggregation/?aggregation=count&aggregationGroupBy=author,genre
+        /book/aggregation/?aggregation=count&group_by=author,genre
 
-## Sorting  & Ordering &#10060;
+## Filtering & Ordering &#10060;
+
 ## Limiting &#10060;

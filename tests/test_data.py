@@ -4,38 +4,38 @@ BASIC_TESTING = [
         [{'group': 'all', 'value': 15}]
     ),
     (
-        {"aggregation": "sum", "aggregationField": "price"},
+        {"aggregation": "sum", "aggregation_field": "price"},
         [{'group': 'all', 'value': 289.85}]
     ),
     (
-        {"aggregation": "average", "aggregationField": "price"},
+        {"aggregation": "average", "aggregation_field": "price"},
         [{'group': 'all', 'value': 19.3233333333333}]
     ),
     (
-        {"aggregation": "avg", "aggregationField": "price"},
+        {"aggregation": "avg", "aggregation_field": "price"},
         [{'group': 'all', 'value': 19.3233333333333}]
     ),
     (
-        {"aggregation": "minimum", "aggregationField": "price"},
+        {"aggregation": "minimum", "aggregation_field": "price"},
         [{'group': 'all', 'value': 15.99}]
     ),
     (
-        {"aggregation": "min", "aggregationField": "price"},
+        {"aggregation": "min", "aggregation_field": "price"},
         [{'group': 'all', 'value': 15.99}]
     ),
     (
-        {"aggregation": "maximum", "aggregationField": "price"},
+        {"aggregation": "maximum", "aggregation_field": "price"},
         [{'group': 'all', 'value': 23.99}]
     ),
     (
-        {"aggregation": "max", "aggregationField": "price"},
+        {"aggregation": "max", "aggregation_field": "price"},
         [{'group': 'all', 'value': 23.99}]
     ),
 ]
 
 GROUP_TESTING = [
     (
-        {"aggregation": "count", "aggregationGroupBy": "authors"},
+        {"aggregation": "count", "group_by": "authors"},
         [
             {
                 "authors": 1,
@@ -56,7 +56,7 @@ GROUP_TESTING = [
         ]
     ),
     (
-        {"aggregation": "avg", "aggregationGroupBy": "store", "aggregationField": "price"},
+        {"aggregation": "avg", "group_by": "store", "aggregation_field": "price"},
         [
             {
                 "store": 1,
@@ -73,7 +73,7 @@ GROUP_TESTING = [
         ]
     ),
     (
-        {"aggregation": "count", "aggregationGroupBy": "authors,store"},
+        {"aggregation": "count", "group_by": "authors,store"},
         [
             {
                 "authors": 1,
@@ -120,35 +120,35 @@ EXCEPTION_TESTING = [
     ),
     (
         {"aggregation": "sum"},
-        "'aggregationField' is required"
+        "'aggregation_field' is required"
     ),
     (
         {"aggregation": "sum"},
-        "'aggregationField' is required"
+        "'aggregation_field' is required"
     ),
     (
-        {"aggregation": "sum", "aggregationField": "noaggregationfield"},
-        "'aggregationField' is not valid"
+        {"aggregation": "sum", "aggregation_field": "no_aggregation_field"},
+        "'aggregation_field' is not valid"
     ),
     (
-        {"aggregation": "sum", "aggregationField": "name"},
-        "'aggregationField' must be a number field"
+        {"aggregation": "sum", "aggregation_field": "name"},
+        "'aggregation_field' must be a number field"
     ),
     (
-        {"aggregation": "max", "aggregationField": "name"},
-        "'aggregationField' must be a number or date field"
+        {"aggregation": "max", "aggregation_field": "name"},
+        "'aggregation_field' must be a number or date field"
     ),
     (
-        {"aggregation": "count", "aggregationGroupBy": "notagroup"},
-        "'aggregationGroupBy' is not valid"
+        {"aggregation": "count", "group_by": "not_a_group"},
+        "'group_by' is not valid"
     )
 ]
 
 # TODO add tests for paginated, filtered Queryset and AggregationViewSet
 MISCELLANEOUS_TESTING = [
-    # test annotated aggregationField
+    # test annotated aggregation_field
     (
-        {"aggregation": "max", "aggregationField": "price_per_page"},
+        {"aggregation": "max", "aggregation_field": "price_per_page"},
         [
             {
                 "group": "all",
@@ -156,9 +156,9 @@ MISCELLANEOUS_TESTING = [
             }
         ]
     ),
-    # test annotated aggregationGroupByField
+    # test annotated group_byField
     (
-        {"aggregation": "count", "aggregationGroupBy": "expensive"},
+        {"aggregation": "count", "group_by": "expensive"},
         [
             {
                 "expensive": 0,
