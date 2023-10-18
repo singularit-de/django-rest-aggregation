@@ -21,4 +21,4 @@ class Aggregation(Enum):
     @classmethod
     def get_number_field_required_aggregations(cls):
         return {value for aggregation in cls for value in aggregation.value
-                if aggregation not in {cls.COUNT or cls.MIN or cls.MAX}}
+                if value not in {*cls.COUNT.value, *cls.MIN.value, *cls.MAX.value}}

@@ -77,7 +77,8 @@ class Aggregator:
         if (aggregation := self.params.get("aggregation", None)) is None:
             raise ValidationError({"error": "'aggregation' is required"})
         if aggregation not in Aggregation.get_all_aggregations():
-            raise ValidationError({"error": f"'aggregation' must be one of {Aggregation.get_all_aggregations()}"})
+            raise ValidationError(
+                {"error": f"'aggregation' must be one of {sorted(Aggregation.get_all_aggregations())}"})
 
         # check if aggregationField is in params and valid
         if aggregation in Aggregation.get_field_required_aggregations():
@@ -92,8 +93,8 @@ class Aggregator:
                 if get_field_type(aggregation_field, self.model) not in ["FloatField", "IntegerField", "DecimalField"]:
                     raise ValidationError({"error": "'aggregationField' must be a number field"})
             else:
-                if get_field_type(aggregation_field, self.model not in
-                                                     ["FloatField", "IntegerField", "DateField", "DateTimeField"]):
+                if get_field_type(aggregation_field, self.model) not in ["FloatField", "IntegerField", "DecimalField",
+                                                                         "DateField", "DateTimeField"]:
                     raise ValidationError({"error": "'aggregationField' must be a number or date field"})
 
         # check if aggregationGroupBy is valid
