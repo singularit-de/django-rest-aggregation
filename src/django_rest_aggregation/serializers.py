@@ -8,12 +8,10 @@ class AggregationSerializer(BaseSerializer):
     def to_representation(self, instance):
         ret = {}
         for field in instance.keys():
-            print(field, instance[field])
             if isinstance(instance[field], int):
                 ret[field] = serializers.IntegerField(read_only=True).to_representation(instance[field])
             elif isinstance(instance[field], float) or isinstance(instance[field], decimal.Decimal):
                 ret[field] = serializers.FloatField(read_only=True).to_representation(float(instance[field]))
             else:
-                print("char")
                 ret[field] = serializers.CharField(read_only=True).to_representation(instance[field])
         return ret

@@ -108,7 +108,7 @@ You can group throughout multiple relations (ForeignKey & ManyToMany Fields) by 
 
 To group by multiple fields, separate them with a comma.
 
-        /book/aggregation/?aggregation=count&aggregationGroupBy=author,genre &
+        /book/aggregation/?aggregation=count&aggregationGroupBy=author,genre
 
-## Sorting &#10060;
+## Sorting  & Ordering &#10060;
 ## Limiting &#10060;

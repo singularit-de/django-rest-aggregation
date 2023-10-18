@@ -1,16 +1,20 @@
+from pathlib import Path
+
 SECRET_KEY = 'secret'
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'rest_framework',
-    'tests'
+    'django_filters',
+    'tests',
 ]
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'test',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

@@ -1,9 +1,12 @@
-from src.drf_aggregation import AggregationRouter
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-from .views import TestCaseViewSet
+from .views import AuthorViewSet, PublisherViewSet, BookViewSet, StoreViewSet
 
+router = DefaultRouter()
+router.register(r'author', AuthorViewSet)
+router.register(r'publisher', PublisherViewSet)
+router.register(r'book', BookViewSet)
+router.register(r'store', StoreViewSet)
 
-aggregation_router = AggregationRouter()
-aggregation_router.register("test", TestCaseViewSet)
-
-urlpatterns = aggregation_router.urls
+urlpatterns = router.urls
