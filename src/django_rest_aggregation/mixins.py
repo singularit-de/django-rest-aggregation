@@ -7,7 +7,7 @@ from .serializers import AggregationSerializer
 
 class AggregationMixin:
     @action(methods=['get'], detail=False, url_path='aggregation', url_name='aggregation')
-    def aggregation(self, request, *args, **kwargs):
+    def aggregation(self, request):
         queryset = self.filter_queryset(self.get_queryset())
 
         aggregator = Aggregator(request, queryset)

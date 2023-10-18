@@ -35,7 +35,7 @@ def get_annotation(params):
         return {"value": models.Max(aggregation_field)}
 
 
-def field_exists(field_name, model):
+def model_field_exists(field_name, model):
     fields = field_name.split("__")
     try:
         field = model._meta.get_field(fields[0])
@@ -46,15 +46,20 @@ def field_exists(field_name, model):
     return True
 
 
-def get_field_type(field_name, model):
-    fields = field_name.split("__")
-    try:
-        field = model._meta.get_field(fields[0])
-        for field_name in fields[1:]:
-            field = field.related_model._meta.get_field(field_name)
-    except FieldDoesNotExist:
-        return None
-    return field.get_internal_type()
+def annotation_field_exists(field_name, queryset):
+    return field_name in queryset.query.annotations
+
+
+def field_exists(field_name, model, queryset):
+    return model_field_exists(field_name, model) or annotation_field_exists(field_name, queryset)
+
+
+def get_field_type(field_name, model, queryset):
+    if annotation_field_exists(field_name, queryset):
+        return queryset.query.annotations.get(field_name).output_field.get_internal_type()
+    elif model_field_exists(field_name, model):
+        return model._meta.get_field(field_name).get_internal_type()
+    return None
 
 
 class Aggregator:
@@ -84,20 +89,22 @@ class Aggregator:
         if aggregation in Aggregation.get_field_required_aggregations():
             if (aggregation_field := self.params.get("aggregationField", None)) is None:
                 raise ValidationError({"error": "'aggregationField' is required"})
-            if not field_exists(aggregation_field, self.model):
+            if not field_exists(aggregation_field, self.model, self.queryset):
                 raise ValidationError(
                     {"error": f"'aggregationField' is not valid"})
 
             # check if aggregationField is correct type
             if aggregation in Aggregation.get_number_field_required_aggregations():
-                if get_field_type(aggregation_field, self.model) not in ["FloatField", "IntegerField", "DecimalField"]:
+                if get_field_type(aggregation_field, self.model, self.queryset) not in ["FloatField", "IntegerField",
+                                                                                        "DecimalField"]:
                     raise ValidationError({"error": "'aggregationField' must be a number field"})
             else:
-                if get_field_type(aggregation_field, self.model) not in ["FloatField", "IntegerField", "DecimalField",
-                                                                         "DateField", "DateTimeField"]:
+                if get_field_type(aggregation_field, self.model, self.queryset) not in ["FloatField", "IntegerField",
+                                                                                        "DecimalField", "DateField",
+                                                                                        "DateTimeField"]:
                     raise ValidationError({"error": "'aggregationField' must be a number or date field"})
 
         # check if aggregationGroupBy is valid
         for group_by in self.params.get("aggregationGroupBy", []):
-            if not field_exists(group_by, self.model):
+            if not field_exists(group_by, self.model, self.queryset):
                 raise ValidationError({"error": "'aggregationGroupBy' is not valid"})
