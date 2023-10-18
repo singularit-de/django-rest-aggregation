@@ -77,8 +77,6 @@ class Aggregator:
         if (aggregation := self.params.get("aggregation", None)) is None:
             raise ValidationError({"error": "'aggregation' is required"})
         if aggregation not in Aggregation.get_all_aggregations():
-            print(Aggregation.get_all_aggregations())
-            print(f"aggregation: {aggregation}")
             raise ValidationError({"error": f"'aggregation' must be one of {Aggregation.get_all_aggregations()}"})
 
         # check if aggregationField is in params and valid

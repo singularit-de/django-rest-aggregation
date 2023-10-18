@@ -6,9 +6,9 @@ from django.utils.translation import gettext_lazy as _
 class Aggregation(Enum):
     COUNT = "count", _("count")
     SUM = "sum", _("sum")
-    AVERAGE = "average", _("average")
-    MIN = "minimum", _("minimum")
-    MAX = "maximum", _("maximum")
+    AVERAGE = "average", _("average"), "avg", _("avg")
+    MIN = "minimum", _("minimum"), "min", _("min")
+    MAX = "maximum", _("maximum"), "max", _("max")
 
     @classmethod
     def get_all_aggregations(cls):
