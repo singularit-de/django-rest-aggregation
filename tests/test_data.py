@@ -1,41 +1,33 @@
 BASIC_TESTING = [
     (
-        "/book/aggregation/",
         {"aggregation": "count"},
         [{'group': 'all', 'value': 15}]
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "sum", "aggregationField": "price"},
         [{'group': 'all', 'value': 289.85}]
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "average", "aggregationField": "price"},
         [{'group': 'all', 'value': 19.3233333333333}]
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "avg", "aggregationField": "price"},
         [{'group': 'all', 'value': 19.3233333333333}]
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "minimum", "aggregationField": "price"},
         [{'group': 'all', 'value': 15.99}]
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "min", "aggregationField": "price"},
         [{'group': 'all', 'value': 15.99}]
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "maximum", "aggregationField": "price"},
         [{'group': 'all', 'value': 23.99}]
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "max", "aggregationField": "price"},
         [{'group': 'all', 'value': 23.99}]
     ),
@@ -43,7 +35,6 @@ BASIC_TESTING = [
 
 GROUP_TESTING = [
     (
-        "/book/aggregation/",
         {"aggregation": "count", "aggregationGroupBy": "authors"},
         [
             {
@@ -65,7 +56,6 @@ GROUP_TESTING = [
         ]
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "avg", "aggregationGroupBy": "store", "aggregationField": "price"},
         [
             {
@@ -83,7 +73,6 @@ GROUP_TESTING = [
         ]
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "count", "aggregationGroupBy": "authors,store"},
         [
             {
@@ -122,48 +111,64 @@ GROUP_TESTING = [
 
 EXCEPTION_TESTING = [
     (
-        "/book/aggregation/",
         {},
         "'aggregation' is required"
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "noaggregation"},
         "'aggregation' must be one of ['average', 'avg', 'count', 'max', 'maximum', 'min', 'minimum', 'sum']"
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "sum"},
         "'aggregationField' is required"
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "sum"},
         "'aggregationField' is required"
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "sum", "aggregationField": "noaggregationfield"},
         "'aggregationField' is not valid"
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "sum", "aggregationField": "name"},
         "'aggregationField' must be a number field"
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "max", "aggregationField": "name"},
         "'aggregationField' must be a number or date field"
     ),
     (
-        "/book/aggregation/",
         {"aggregation": "count", "aggregationGroupBy": "notagroup"},
         "'aggregationGroupBy' is not valid"
     )
 ]
 
-# TODO add tests for paginated, filtered and AggregationViewSet
+# TODO add tests for paginated, filtered Queryset and AggregationViewSet
 MISCELLANEOUS_TESTING = [
+    # test annotated aggregationField
+    (
+        {"aggregation": "max", "aggregationField": "price_per_page"},
+        [
+            {
+                "group": "all",
+                "value": 0.06559375
+            }
+        ]
+    ),
+    # test annotated aggregationGroupByField
+    (
+        {"aggregation": "count", "aggregationGroupBy": "expensive"},
+        [
+            {
+                "expensive": 0,
+                "value": 11
+            },
+            {
+                "expensive": 1,
+                "value": 4
+            }
+        ]
+    )
 
 ]

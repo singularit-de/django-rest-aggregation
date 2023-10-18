@@ -1,3 +1,4 @@
+from django.db.models import F, Case, When, Value, BooleanField
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -25,6 +26,14 @@ class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
     filterset_class = BookFilter
     ordering_fields = "__all__"
     search_fields = ["name", "authors__name", "publisher__name"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.annotate(price_per_page=F('price') / F('pages'),
+                                 expensive=Case(
+                                     When(price__gt=20, then=Value(True)),
+                                     default=Value(False),
+                                     output_field=BooleanField()))
 
 
 class PublisherViewSet(viewsets.ModelViewSet, AggregationMixin):

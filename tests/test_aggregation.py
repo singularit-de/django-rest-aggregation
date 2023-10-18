@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase
 
 from .fixture import AUTHORS, BOOKS, PUBLISHERS, STORES
 from .models import Book, Author, Publisher, Store
-from .test_data import BASIC_TESTING, GROUP_TESTING, EXCEPTION_TESTING
+from .test_data import BASIC_TESTING, GROUP_TESTING, EXCEPTION_TESTING, MISCELLANEOUS_TESTING
 
 
 class AggregationTests(APITestCase):
@@ -30,9 +30,11 @@ class AggregationTests(APITestCase):
             store.save()
             store.books.set(books_data)
 
-    @parameterized.expand(BASIC_TESTING + GROUP_TESTING)
-    def test_200(self, url, query, expected_response):
-        response = self.client.get(url, query, format="json")
+        self.URL = "/book/aggregation/"
+
+    @parameterized.expand(BASIC_TESTING + GROUP_TESTING + MISCELLANEOUS_TESTING)
+    def test_200(self, query, expected_response):
+        response = self.client.get(self.URL, query, format="json")
         self.assertEqual(response.status_code, 200, msg=f"Failed on: {query}")
         self.assertEqual(response.data, expected_response,
                          msg=f"Failed on: {query}"
@@ -40,8 +42,8 @@ class AggregationTests(APITestCase):
                              f"\nExpected: {expected_response}")
 
     @parameterized.expand(EXCEPTION_TESTING)
-    def test_400(self, url, query, expected_response):
-        response = self.client.get(url, query, format="json")
+    def test_400(self, query, expected_response):
+        response = self.client.get(self.URL, query, format="json")
         self.assertEqual(response.status_code, 400, msg=f"Failed on: {query}")
         self.assertEqual(response.data['error'], expected_response,
                          msg=f"Failed on: {query}"

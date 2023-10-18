@@ -16,6 +16,9 @@ class PublisherSerializer(serializers.ModelSerializer):
 
 
 class BookSerializer(serializers.ModelSerializer):
+    price_per_page = serializers.FloatField()
+    expensive = serializers.BooleanField()
+
     class Meta:
         model = Book
         fields = '__all__'
