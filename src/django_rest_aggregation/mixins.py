@@ -8,17 +8,16 @@ from .serializers import AggregationSerializer
 class AggregationMixin:
     @action(methods=['get'], detail=False, url_path='aggregation', url_name='aggregation')
     def aggregation(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset()).order_by()
 
         aggregator = Aggregator(request, queryset, self.get_aggregation_name())
-        queryset = aggregator.get_aggregated_queryset()
-        queryset = self.filter_aggregated_queryset(queryset)
+        filtered_queryset = self.filter_aggregated_queryset(aggregator.get_aggregated_queryset())
 
-        page = self.paginate_queryset(queryset)
+        page = self.paginate_queryset(filtered_queryset)
         if page is not None:
             serializer = self.get_aggregation_serializer_class(page, many=True)
             return self.get_paginated_response(serializer.data)
-        serializer = self.get_aggregation_serializer_class(queryset, many=True)
+        serializer = self.get_aggregation_serializer_class(filtered_queryset, many=True)
         return Response(serializer.data)
 
     def get_aggregation_serializer_class(self, *args, **kwargs):
@@ -33,20 +32,17 @@ class AggregationMixin:
             return name
         return "value"
 
-    # Todo
     def filter_aggregated_queryset(self, queryset):
         class HelperClass:
-            def __init__(self, ordering_fields, filterset_class, filterset_fields):
+            def __init__(self, ordering_fields, filterset_class):
                 setattr(self, "ordering_fields", ordering_fields)
                 setattr(self, "filterset_class", filterset_class)
-                setattr(self, "filterset_fields", filterset_fields)
 
         filter_dict = {
-            "ordering_fields": getattr(self, "ordering_fields", None),
+            "ordering_fields": queryset[0].keys(),
             "filterset_class": getattr(self, "aggregated_filterset_class", None),
-            "filterset_fields": getattr(self, "aggregated_filterset_fields", None)
         }
+
         for backend in list(self.filter_backends):
             queryset = backend().filter_queryset(self.request, queryset, HelperClass(**filter_dict))
         return queryset
-#

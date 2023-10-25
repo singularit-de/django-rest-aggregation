@@ -6,15 +6,15 @@ from rest_framework.request import Request
 from django_rest_aggregation.enums import Aggregation
 
 
-# Todo refractor
 def get_filtered_params(request):
     params = {}
     for key in ["aggregation", "aggregation_field", "group_by"]:
         if len(request.query_params.getlist(key, [])) == 1:
             params[key] = request.query_params.getlist(key)[0]
         if len(request.query_params.getlist(key, [])) > 1:
-            raise ValidationError(
-                {"error": f"Only one {key} is allowed, please use comma separated values for grouping"})
+            error_message = f"Only one {key} is allowed" if key != "group_by" else \
+                "please use comma separated values for grouping"
+            raise ValidationError({"error": error_message})
 
     if params.get("group_by", None) is not None:
         params["group_by"] = params["group_by"].split(",")
@@ -88,8 +88,6 @@ class Aggregator:
         # check if aggregation is in params and is valid
         if (aggregation := self.params.get("aggregation", None)) is None:
             raise ValidationError({"error": "'aggregation' is required"})
-        if type(aggregation) != str:
-            raise ValidationError({"error": "'aggregation' must be a string"})
         if aggregation not in Aggregation.get_all_aggregations():
             raise ValidationError(
                 {"error": f"'aggregation' must be one of {sorted(Aggregation.get_all_aggregations())}"})
