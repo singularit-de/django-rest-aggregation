@@ -1,4 +1,25 @@
 BASIC_TESTING = [
+(
+        {"aggregation": "count", "group_by": "authors", "value__gte": 4},
+        [
+            {
+                "authors": 1,
+                "value": 3
+            },
+            {
+                "authors": 2,
+                "value": 4
+            },
+            {
+                "authors": 3,
+                "value": 4
+            },
+            {
+                "authors": 4,
+                "value": 4
+            }
+        ]
+    ),
     (
         {"aggregation": "count"},
         [{'group': 'all', 'value': 15}]

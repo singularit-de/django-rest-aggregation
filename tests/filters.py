@@ -24,3 +24,13 @@ class AuthorFilter(filters.FilterSet):
             'name': ['icontains'],
             'age': ['gte', 'lte', 'gt', 'lt'],
         }
+
+
+class ValueFilter(filters.FilterSet):
+    value__gte = filters.NumberFilter(field_name='value', lookup_expr='gte')
+    value__lte = filters.NumberFilter(field_name='value', lookup_expr='lte')
+    value__gt = filters.NumberFilter(field_name='value', lookup_expr='gt')
+    value__lt = filters.NumberFilter(field_name='value', lookup_expr='lt')
+
+    class Meta:
+        fields = ['value__gte', 'value__lte', 'value__gt', 'value__lt']

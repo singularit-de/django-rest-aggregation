@@ -4,18 +4,9 @@ from rest_framework import viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 from django_rest_aggregation.mixins import AggregationMixin
-from django_rest_aggregation.viewsets import AggregationViewSet
-from .filters import BookFilter
-from .models import Author, Book, Publisher, Store
-from .serializer import AuthorSerializer, BookSerializer, PublisherSerializer, StoreSerializer
-
-
-class AuthorViewSet(AggregationViewSet):
-    queryset = Author.objects.all()
-    serializer_class = AuthorSerializer
-    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
-    ordering_fields = "__all__"
-    search_fields = ["name"]
+from .filters import BookFilter, ValueFilter
+from .models import Book, Publisher, Store
+from .serializer import BookSerializer, PublisherSerializer, StoreSerializer
 
 
 class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
@@ -26,6 +17,8 @@ class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
     filterset_class = BookFilter
     ordering_fields = "__all__"
     search_fields = ["name", "authors__name", "publisher__name"]
+
+    aggregated_filterset_class = ValueFilter
 
     def get_queryset(self):
         queryset = super().get_queryset()
