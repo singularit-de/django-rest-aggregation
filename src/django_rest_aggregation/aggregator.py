@@ -5,7 +5,8 @@ from rest_framework.request import Request
 
 from django_rest_aggregation.enums import Aggregation
 
-#Todo refractor
+
+# Todo refractor
 def get_filtered_params(request):
     params = {}
     for key in ["aggregation", "aggregation_field", "group_by"]:
@@ -20,24 +21,24 @@ def get_filtered_params(request):
     return params
 
 
-def get_annotation(params):
+def get_annotation(params, name):
     aggregation = params.get("aggregation")
     aggregation_field = params.get("aggregation_field")
 
     if aggregation in Aggregation.COUNT.value:
-        return {"value": models.Count('id')}
+        return {name: models.Count('id')}
 
     if aggregation in Aggregation.SUM.value:
-        return {"value": models.Sum(aggregation_field)}
+        return {name: models.Sum(aggregation_field)}
 
     if aggregation in Aggregation.AVERAGE.value:
-        return {"value": models.Avg(aggregation_field)}
+        return {name: models.Avg(aggregation_field)}
 
     if aggregation in Aggregation.MIN.value:
-        return {"value": models.Min(aggregation_field)}
+        return {name: models.Min(aggregation_field)}
 
     if aggregation in Aggregation.MAX.value:
-        return {"value": models.Max(aggregation_field)}
+        return {name: models.Max(aggregation_field)}
 
 
 def model_field_exists(field_name, model):
@@ -68,10 +69,11 @@ def get_field_type(field_name, model, queryset):
 
 
 class Aggregator:
-    def __init__(self, request: Request, queryset: models.QuerySet):
+    def __init__(self, request: Request, queryset: models.QuerySet, aggregation_name: str):
         self.params = get_filtered_params(request)
         self.queryset = queryset
         self.model = queryset.model
+        self.aggregation_name = aggregation_name
 
     def get_aggregated_queryset(self):
         self.validate_params()
@@ -79,7 +81,7 @@ class Aggregator:
         if (group_by := self.params.get("group_by", ["group"])) == ["group"]:
             self.queryset = self.queryset.annotate(group=models.Value("all", output_field=models.CharField()))
 
-        return self.queryset.values(*group_by).annotate(**get_annotation(self.params))
+        return self.queryset.values(*group_by).annotate(**get_annotation(self.params, self.aggregation_name))
 
     def validate_params(self):
 
