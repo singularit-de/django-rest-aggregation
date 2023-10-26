@@ -64,7 +64,11 @@ def get_field_type(field_name, model, queryset):
     if annotation_field_exists(field_name, queryset):
         return queryset.query.annotations.get(field_name).output_field.get_internal_type()
     elif model_field_exists(field_name, model):
-        return model._meta.get_field(field_name).get_internal_type()
+        fields = field_name.split("__")
+        field = model._meta.get_field(fields[0])
+        for field_name in fields[1:]:
+            field = field.related_model._meta.get_field(field_name)
+        return field.get_internal_type()
     return None
 
 
