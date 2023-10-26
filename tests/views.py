@@ -19,6 +19,7 @@ class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
     search_fields = ["name", "authors__name", "publisher__name"]
 
     aggregated_filterset_class = ValueFilter
+    #aggregated_filtering_fields = ["gte", "lte", "gt", "lt", "exact"]
 
     def get_queryset(self):
         queryset = super().get_queryset()

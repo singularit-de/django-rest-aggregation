@@ -8,10 +8,9 @@ A simple Django Rest Framework extension to add aggregation endpoints to your AP
 
 Key features:
 
-- count, sum, average, minimum, maximum, percentile &#10060; and percent&#10060;
+- count, sum, average, minimum, maximum
 - grouping by multiple fields
 - filtering and ordering
-- and limiting the number of results &#10060;
 
 ---
 
@@ -23,11 +22,10 @@ For installing use pip: &#10060;
 
 ## Usage
 
-Create a ViewSet using the **AggregationViewSet** class or use the **AggregationMixin** in your own ViewSet.
+Inherit the **AggregationMixin** in your ViewSet.
 
 ```python
 from django_rest_aggregation.mixins import AggregationMixin
-from django_rest_aggregation.viewsets import AggregationViewSet
 
 ...
 
@@ -35,21 +33,17 @@ from django_rest_aggregation.viewsets import AggregationViewSet
 class AuthorViewSet(GenericViewSet, AggregationMixin):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
-
-
-class BookViewSet(AggregationViewSet):
-    queryset = Book.objects.all()
-    serializer_class = BookSerializer
 ```
 
 Register the ViewSet in your urls.py. The default aggregation endpoint is **{base_url}/aggregation/**.
 
 ```python
 router = DefaultRouter()
-router.register(r'author', AuthorViewSet)
+router.register(r'book', BookViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    # or
     path('book/custom/endpoint/', BookViewSet.as_view({'get': 'aggregation'})
 ]
 ```
@@ -71,6 +65,15 @@ Get the aggregation results by sending a GET request to the aggregation endpoint
 | aggregation_field | the field to aggregate on                  | ```aggregation_field=price``` |
 | group_by          | the field on which the queryset is grouped | ```group_by=author```         |
 
+## View Class Variables
+
+| class variable               | description                                          | example                                             |
+|------------------------------|------------------------------------------------------|-----------------------------------------------------|
+| aggregation_name             | changes the value name                               | ```aggregation_name=foo```                          |
+| aggregation_serializer_class | Sets a custom serializer for the queryset            | ```aggregation_serializer_class=CustomSerializer``` |
+| aggregated_filtering_class   | Sets a FilterSet Class for filtering the value field | ```aggregated_filtering_class=ValueFilter```        |
+| aggregated_filterset_fields  | A shortcut for setting a value Filtersets            | ```aggregated_filterset_fields=[lt, lte, gt]```     |
+
 ## Aggregations
 
 Available aggregations are:
@@ -80,8 +83,6 @@ Available aggregations are:
 - average
 - minimum
 - maximum
-- percentile &#10060;
-- percent &#10060;
 
 They can be used by adding the mandatory **aggregation** parameter to the request URL.
 
@@ -117,5 +118,3 @@ To group by multiple fields, separate them with a comma.
         /book/aggregation/?aggregation=count&group_by=author,genre
 
 ## Filtering & Ordering &#10060;
-
-## Limiting &#10060;
