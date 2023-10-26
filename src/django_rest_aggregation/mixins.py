@@ -8,7 +8,7 @@ from .serializers import AggregationSerializer
 
 
 class AggregationMixin(GenericAPIView):
-    @action(methods=['get'], detail=False, url_path=get_aggregation_url_path(), url_name=get_aggregation_url_name())
+    @action(methods=['get'], detail=False, url_path="aggregation", url_name="aggregation")
     def aggregation(self, request):
         queryset = self.filter_queryset(self.get_queryset()).order_by()
 
