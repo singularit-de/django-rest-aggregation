@@ -5,8 +5,8 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 
 from django_rest_aggregation.mixins import AggregationMixin
 from .filters import BookFilter, ValueFilter
-from .models import Book, Publisher, Store
-from .serializer import BookSerializer, PublisherSerializer, StoreSerializer
+from .models import Book, Store
+from .serializer import BookSerializer, StoreSerializer
 
 
 class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
@@ -19,20 +19,16 @@ class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
     search_fields = ["name", "authors__name", "publisher__name"]
 
     aggregated_filterset_class = ValueFilter
-    #aggregated_filtering_fields = ["gte", "lte", "gt", "lt", "exact"]
+
+    # aggregated_filtering_fields = ["gte", "lte", "gt", "lt", "exact"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.annotate(price_per_page=F('price') / F('pages'),
                                  expensive=Case(
-                                     When(price__gt=20, then=Value(True)),
+                                     When(price__gt=17, then=Value(True)),
                                      default=Value(False),
                                      output_field=BooleanField()))
-
-
-class PublisherViewSet(viewsets.ModelViewSet, AggregationMixin):
-    queryset = Publisher.objects.all()
-    serializer_class = PublisherSerializer
 
 
 class StoreViewSet(viewsets.ModelViewSet, AggregationMixin):

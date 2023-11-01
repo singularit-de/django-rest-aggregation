@@ -1,5 +1,4 @@
 from rest_framework.decorators import action
-from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from .aggregator import Aggregator
@@ -7,7 +6,7 @@ from .filter import ValueFilter
 from .serializers import AggregationSerializer
 
 
-class AggregationMixin(GenericAPIView):
+class AggregationMixin:
     @action(methods=['get'], detail=False, url_path="aggregation", url_name="aggregation")
     def aggregation(self, request):
         queryset = self.filter_queryset(self.get_queryset()).order_by()

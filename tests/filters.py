@@ -11,8 +11,7 @@ class BookFilter(filters.FilterSet):
             'pages': ['gte', 'lte', 'gt', 'lt'],
             'price': ['gte', 'lte', 'gt', 'lt'],
             'rating': ['gte', 'lte', 'gt', 'lt'],
-            'authors__name': ['icontains'],
-            'publisher__name': ['icontains'],
+            'author__name': ['icontains'],
             'pubdate': ['gte', 'lte', 'gt', 'lt'],
         }
 
