@@ -23,7 +23,7 @@ class Book(models.Model):
 
 class Store(models.Model):
     name = models.CharField(max_length=300)
-    books = models.ManyToManyField(Book)
+    books = models.ManyToManyField(Book, related_name="stores")
 
     def __str__(self):
         return self.name

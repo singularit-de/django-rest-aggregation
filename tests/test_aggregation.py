@@ -3,50 +3,6 @@ from rest_framework.test import APITestCase
 from tests.models import Author, Book, Store
 
 
-# class AggregationTests(APITestCase):
-#    def setUp(self):
-#        for author_data in AUTHORS:
-#            author = Author(**author_data)
-#            author.save()
-#        for publisher_data in PUBLISHERS:
-#            publisher = Publisher(**publisher_data)
-#            publisher.save()
-#
-#        for book_data in BOOKS:
-#            book_data = book_data.copy()
-#            authors_data = book_data.pop("authors", [])
-#            publisher_data = book_data.pop("publisher", [])
-#            book = Book(**book_data, publisher_id=publisher_data)
-#            book.save()
-#            book.authors.set(authors_data)
-#
-#        for store in STORES:
-#            store = store.copy()
-#            books_data = store.pop("books", [])
-#            store = Store(**store)
-#            store.save()
-#            store.books.set(books_data)
-#
-#        self.URL = "/book/aggregation/"
-#
-#    @parameterized.expand(BASIC_TESTING + GROUP_TESTING + MISCELLANEOUS_TESTING)
-#    def test_200(self, query, expected_response):
-#        response = self.client.get(self.URL, query, format="json")
-#        self.assertEqual(response.status_code, 200, msg=f"Failed on: {query}")
-#        self.assertEqual(response.data, expected_response,
-#                         msg=f"Failed on: {query}"
-#                             f"\nResponse: {response.data}"
-#                             f"\nExpected: {expected_response}")
-#
-#    @parameterized.expand(EXCEPTION_TESTING)
-#    def test_400(self, query, expected_response):
-#        response = self.client.get(self.URL, query, format="json")
-#        self.assertEqual(response.status_code, 400, msg=f"Failed on: {query}")
-#        self.assertEqual(response.data['error'], expected_response,
-#                         msg=f"Failed on: {query}"
-#                             f"\nResponse: {response.data['error']}"
-#                             f"\nExpected: {expected_response}")
-
 class TestBasicFunctionality(APITestCase):
     def setUp(self):
         author = Author(name="John", age=20)
@@ -180,6 +136,17 @@ class TestGroupingAndAnnotations(APITestCase):
         self.assertEqual(response.data,
                          [{"author": self.author.pk, "value": 3}, {"author": self.author2.pk, "value": 2}])
 
+        # Groupy by multiple fields
+        response = self.client.get("/book/aggregation/",
+                                   {"aggregation": "count", "group_by": "stores__name,author__name"},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{'stores__name': 'Store1', 'author__name': 'Jane', 'value': 1},
+                                         {'stores__name': 'Store1', 'author__name': 'John', 'value': 2},
+                                         {'stores__name': 'Store2', 'author__name': 'Jane', 'value': 1},
+                                         {'stores__name': 'Store2', 'author__name': 'John', 'value': 1}]),
+
+    def test_group_by_related_field(self):
         # Group by foreign key related field
         response = self.client.get("/book/aggregation/", {"aggregation": "count", "group_by": "author__name"},
                                    format="json")
@@ -188,13 +155,13 @@ class TestGroupingAndAnnotations(APITestCase):
                                          {"author__name": self.author.name, "value": 3}])
 
         # Group by many to many related field
-        resonse = self.client.get("/store/aggregation/",
-                                  {"aggregation": "sum", "aggregation_field": "books__pages",
-                                   "group_by": "books__author__age"},
-                                  format="json")
-        self.assertEqual(resonse.status_code, 200)
-        self.assertEqual(resonse.data, [{"books__author__age": self.author.age, "value": 600},
-                                        {"books__author__age": self.author2.age, "value": 900}])
+        response = self.client.get("/store/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "books__pages",
+                                    "group_by": "books__author__age"},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{"books__author__age": self.author.age, "value": 600},
+                                         {"books__author__age": self.author2.age, "value": 900}])
 
     def test_annotations(self):
         # aggregation over annotation
@@ -212,4 +179,54 @@ class TestGroupingAndAnnotations(APITestCase):
                          [{'expensive': 0, 'value': 10.993333333333334}, {'expensive': 1, 'value': 21.99}])
 
 
+class TestValidation(APITestCase):
+    def test_aggregation_validation(self):
+        response = self.client.get("/book/aggregation/", {}, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], "'aggregation' is required")
 
+        response = self.client.get("/book/aggregation/", {"aggregation": "invalid"}, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'],
+                         "'aggregation' must be one of ['average', 'avg', 'count', 'max', 'maximum', 'min', "
+                         "'minimum', 'sum']")
+
+        response = self.client.get("/book/aggregation/", {"aggregation": ["test", 123]}, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], "Only one aggregation is allowed")
+
+    def test_aggregation_field_validation(self):
+        response = self.client.get("/book/aggregation/", {"aggregation": "sum"}, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], "'aggregation_field' is required")
+
+        response = self.client.get("/book/aggregation/", {"aggregation": "sum", "aggregation_field": "invalid"},
+                                   format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], "'aggregation_field' is not valid")
+
+        response = self.client.get("/book/aggregation/", {"aggregation": "sum", "aggregation_field": ["test", 123]},
+                                   format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], "Only one aggregation_field is allowed")
+
+        response = self.client.get("/book/aggregation/", {"aggregation": "sum", "aggregation_field": "name"},
+                                   format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], "'aggregation_field' must be a number field")
+
+        response = self.client.get("/book/aggregation/", {"aggregation": "max", "aggregation_field": "name"},
+                                   format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], "'aggregation_field' must be a number or a date field")
+
+    def test_group_by_validation(self):
+        response = self.client.get("/book/aggregation/", {"aggregation": "count", "group_by": "invalid"},
+                                   format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], "'group_by' is not valid")
+
+        response = self.client.get("/book/aggregation/", {"aggregation": "count", "group_by": ["test", 123]},
+                                   format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], "please use comma separated values for grouping")

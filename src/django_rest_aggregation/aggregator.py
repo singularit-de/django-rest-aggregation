@@ -113,7 +113,7 @@ class Aggregator:
                 if get_field_type(aggregation_field, self.model, self.queryset) not in ["FloatField", "IntegerField",
                                                                                         "DecimalField", "DateField",
                                                                                         "DateTimeField"]:
-                    raise ValidationError({"error": "'aggregation_field' must be a number or date field"})
+                    raise ValidationError({"error": "'aggregation_field' must be a number or a date field"})
 
         # check if group_by is valid
         for group_by in self.params.get("group_by", []):
