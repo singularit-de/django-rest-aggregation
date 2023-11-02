@@ -69,7 +69,6 @@ def get_field_type(field_name, model, queryset):
         for field_name in fields[1:]:
             field = field.related_model._meta.get_field(field_name)
         return field.get_internal_type()
-    return None
 
 
 class Aggregator:

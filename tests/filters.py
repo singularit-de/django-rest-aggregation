@@ -11,7 +11,7 @@ class BookFilter(filters.FilterSet):
             'pages': ['gte', 'lte', 'gt', 'lt'],
             'price': ['gte', 'lte', 'gt', 'lt'],
             'rating': ['gte', 'lte', 'gt', 'lt'],
-            'author__name': ['icontains'],
+            'author__name': ['icontains', 'exact'],
             'pubdate': ['gte', 'lte', 'gt', 'lt'],
         }
 
@@ -25,11 +25,11 @@ class AuthorFilter(filters.FilterSet):
         }
 
 
-class ValueFilter(filters.FilterSet):
-    value__gte = filters.NumberFilter(field_name='value', lookup_expr='gte')
-    value__lte = filters.NumberFilter(field_name='value', lookup_expr='lte')
-    value__gt = filters.NumberFilter(field_name='value', lookup_expr='gt')
-    value__lt = filters.NumberFilter(field_name='value', lookup_expr='lt')
+class Test123Filter(filters.FilterSet):
+    test123__gte = filters.NumberFilter(field_name='test123', lookup_expr='gte')
+    test123__lte = filters.NumberFilter(field_name='test123', lookup_expr='lte')
+    test123__gt = filters.NumberFilter(field_name='test123', lookup_expr='gt')
+    test123__lt = filters.NumberFilter(field_name='test123', lookup_expr='lt')
 
     class Meta:
-        fields = ['value__gte', 'value__lte', 'value__gt', 'value__lt']
+        fields = ['test123__gte', 'test123__lte', 'test123__gt', 'test123__lt']

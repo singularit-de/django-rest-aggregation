@@ -21,5 +21,6 @@ if __name__ == "__main__":
     cov.stop()
     cov.save()
     cov.report()
+    cov.html_report()
 
     sys.exit(bool(failures))

@@ -14,7 +14,7 @@ class Book(models.Model):
     pages = models.IntegerField()
     price = models.FloatField()
     rating = models.DecimalField(max_digits=2, decimal_places=1)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="books")
     pubdate = models.DateField()
 
     def __str__(self):
