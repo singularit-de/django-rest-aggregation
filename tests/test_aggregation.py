@@ -180,6 +180,11 @@ class TestGroupingAndAnnotations(APITestCase):
 
 
 class TestValidation(APITestCase):
+    def setUp(self):
+        self.author = Author(name="John", age=20)
+        self.author.save()
+        Book(name="Book1", pages=100, price=10.55, rating=4.5, author=self.author, pubdate="2020-01-01").save()
+
     def test_aggregation_validation(self):
         response = self.client.get("/book/aggregation/", {}, format="json")
         self.assertEqual(response.status_code, 400)
@@ -231,6 +236,13 @@ class TestValidation(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['error'], "please use comma separated values for grouping")
 
+    def test_empty_aggregated_queryset(self):
+        response = self.client.get("/book/aggregation/",
+                                   {"aggregation": "count", "group_by": "author__name", "value__gt": 1},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [])
+
 
 class TestFilteringAndOrdering(APITestCase):
     def setUp(self):
@@ -258,16 +270,18 @@ class TestFilteringAndOrdering(APITestCase):
 
     def test_filter_before_aggregation(self):
         # filtering before aggregation
-        response = self.client.get("/book/aggregation/", {"aggregation": "count", "author__name": self.author.name},
+        response = self.client.get("/book/aggregation/", {"aggregation": "sum", "aggregation_field": "pages",
+                                                          "author__name": self.author.name},
                                    format="json")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, [{"group": "all", "value": 4}])
+        self.assertEqual(response.data, [{"group": "all", "value": 1000}])
 
         response = self.client.get("/book/aggregation/",
-                                   {"aggregation": "count", "author__name__icontains": self.author2.name},
+                                   {"aggregation": "sum", "aggregation_field": "pages",
+                                    "author__name": self.author2.name},
                                    format="json")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, [{"group": "all", "value": 4}])
+        self.assertEqual(response.data, [{"group": "all", "value": 2600}])
 
         response = self.client.get("/book/aggregation/",
                                    {"aggregation": "sum", "aggregation_field": "pages", "pages__gt": 200},
@@ -276,10 +290,6 @@ class TestFilteringAndOrdering(APITestCase):
         self.assertEqual(response.data, [{"group": "all", "value": 3300}])
 
     def test_aggregated_filterset_fields(self):
-        response = self.client.get("/book/aggregation/",
-                                   {"aggregation": "sum", "aggregation_field": "pages", "group_by": "author,stores"},
-                                   format="json")
-
         # value__lte
         response = self.client.get("/book/aggregation/",
                                    {"aggregation": "sum", "aggregation_field": "pages", "group_by": "author,stores",
@@ -324,19 +334,33 @@ class TestFilteringAndOrdering(APITestCase):
         self.assertEqual(response.data, [{'author': 2, 'stores': 1, 'value': 1200}])
 
     def test_aggregated_filterset_class(self):
+        # only value__gte and value__lte are allowed
         response = self.client.get("/author/aggregation/",
                                    {"aggregation": "sum", "aggregation_field": "books__pages",
-                                    "group_by": "name", "test123__gte": 15},
+                                    "group_by": "name", "test123__gte": 2600},
                                    format="json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data,
-                         [{'name': 'Jane', 'test123': 2600}, {'name': 'John', 'test123': 1000}])
+                         [{'name': 'Jane', 'test123': 2600}])
 
-    def test_ordering(self):
-        response = self.client.get("/book/aggregation/",
-                                   {"aggregation": "sum", "aggregation_field": "pages", "group_by": "author,stores"},
+    def test_aggregated_filterset_class_ignored_fields(self):
+        # value__gt and value__lt are not specified in the filter
+        response = self.client.get("/author/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "books__pages",
+                                    "group_by": "name", "test123__lte": 1500},
                                    format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data,
+                         [{'name': 'John', 'test123': 1000}])
 
+        response = self.client.get("/author/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "books__pages",
+                                    "group_by": "name", "test123__gt": 2600},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{'name': 'Jane', 'test123': 2600}, {'name': 'John', 'test123': 1000}])
+
+    def test_ordering_aggregation(self):
         # ordering by aggregation
         response = self.client.get("/book/aggregation/",
                                    {"aggregation": "sum", "aggregation_field": "pages", "group_by": "author,stores",
@@ -356,6 +380,73 @@ class TestFilteringAndOrdering(APITestCase):
                          [{'author': 2, 'stores': 2, 'value': 1400}, {'author': 2, 'stores': 1, 'value': 1200},
                           {'author': 1, 'stores': 2, 'value': 600}, {'author': 1, 'stores': 1, 'value': 400}])
 
+    def test_ordering(self):
+        response = self.client.get("/book/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "pages",
+                                    "group_by": "author__name,stores",
+                                    "ordering": "-author__name"},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data,
+                         [{'author__name': 'John', 'stores': 1, 'value': 400},
+                          {'author__name': 'John', 'stores': 2, 'value': 600},
+                          {'author__name': 'Jane', 'stores': 1, 'value': 1200},
+                          {'author__name': 'Jane', 'stores': 2, 'value': 1400},
+                          ])
 
-class TestMiscellaneous(APITestCase):
-    
+    def test_ordering_by_multiple_fields(self):
+        response = self.client.get("/book/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "pages",
+                                    "group_by": "author__name,stores",
+                                    "ordering": "author__name,value"},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{'author__name': 'Jane', 'stores': 1, 'value': 1200},
+                                         {'author__name': 'Jane', 'stores': 2, 'value': 1400},
+                                         {'author__name': 'John', 'stores': 1, 'value': 400},
+                                         {'author__name': 'John', 'stores': 2, 'value': 600}])
+
+        response = self.client.get("/book/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "pages",
+                                    "group_by": "author__name,stores",
+                                    "ordering": "author__name,-value"},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{'author__name': 'Jane', 'stores': 2, 'value': 1400},
+                                         {'author__name': 'Jane', 'stores': 1, 'value': 1200},
+                                         {'author__name': 'John', 'stores': 2, 'value': 600},
+                                         {'author__name': 'John', 'stores': 1, 'value': 400}])
+
+
+class TestCustomization(APITestCase):
+    def setUp(self):
+        self.author = Author(name="John", age=20)
+        self.author.save()
+        Book(name="Book1", pages=100, price=10.55, rating=4.5, author=self.author, pubdate="2020-01-01").save()
+
+    def test_custom_serializer_and_name(self):
+        response = self.client.get("/book/aggregation/", {"aggregation": "sum", "aggregation_field": "price"},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{"group": "all", "value": 10.55}])
+
+        response = self.client.get("/customized_book/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "price", "ordering": "CustomizedValue"},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["results"], [{"group": "all", "CustomizedValue": '10.6'}])
+
+    def test_pagination(self):
+        response = self.client.get("/customized_book/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "price", "ordering": "CustomizedValue"},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data.keys(), {"count", "next", "previous", "results"})
+
+    def test_all_field(self):
+        response = self.client.get("/customized_book/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "price", "CustomizedValue__gte": 20,
+                                    "ordering": "CustomizedValue"},
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["results"], [])
