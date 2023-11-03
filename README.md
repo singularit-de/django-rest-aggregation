@@ -20,7 +20,7 @@ For installing use pip: &#10060;
 
     pip install [COMING SOON] 
 
-## Usage
+## Quickstart
 
 Inherit the **AggregationMixin** in your ViewSet.
 
@@ -30,9 +30,9 @@ from django_rest_aggregation.mixins import AggregationMixin
 ...
 
 
-class AuthorViewSet(GenericViewSet, AggregationMixin):
-    queryset = Author.objects.all()
-    serializer_class = AuthorSerializer
+class BookViewSet(GenericViewSet, AggregationMixin):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
 ```
 
 Register the ViewSet in your urls.py. The default aggregation endpoint is **{base_url}/aggregation/**.
@@ -50,26 +50,29 @@ urlpatterns = [
 
 Get the aggregation results by sending a GET request to the aggregation endpoint.
 
-| URL                                                                                   | What it does                             |
-|---------------------------------------------------------------------------------------|------------------------------------------|
-| ```/book/aggregation/?aggregation=count ```                                           | Get the total number of books            |
-| ```/book/aggregation/?aggregation=maximum&aggregation_field=price```                  | Get the most expensive book              |
-| ```/book/aggregation/?aggregation=average&aggregation_field=rating&group_by=author``` | Get the average rating grouped by author |
-| &#10060;                                                                              | &#10060;                                 |
+| URL                                                                                             | What it does                                                            |
+|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| ```/book/aggregation/?aggregation=count ```                                                     | Get the total number of books                                           |
+| ```/book/aggregation/?aggregation=maximum&aggregation_field=price```                            | Get the most expensive book                                             |
+| ```/book/aggregation/?aggregation=average&aggregation_field=rating&group_by=author```           | Get the average rating grouped by author                                |
+| ```/book/aggregation/?aggregation=sum&aggregation_field=pages&group_by=author&value__gt=1000``` | Get the sum of all pages grouped by authors which are greater than 1000 |
 
-## Query parameter overview
+## Parameter overview
+
+### URL Parameters
 
 | query parameter   | description                                | example                       |
 |-------------------|--------------------------------------------|-------------------------------|
 | aggregation       | determines the type of aggregation         | ```aggregation=sum```         |
 | aggregation_field | the field to aggregate on                  | ```aggregation_field=price``` |
 | group_by          | the field on which the queryset is grouped | ```group_by=author```         |
+| value             | a value to filter the queryset             | ```value__gt=1000```          |
 
-## View Class Variables
+### View Class Variables
 
 | class variable               | description                                          | example                                             |
 |------------------------------|------------------------------------------------------|-----------------------------------------------------|
-| aggregation_name             | changes the value name                               | ```aggregation_name=foo```                          |
+| aggregation_name             | changes the default value name                       | ```aggregation_name=foo```                          |
 | aggregation_serializer_class | Sets a custom serializer for the queryset            | ```aggregation_serializer_class=CustomSerializer``` |
 | aggregated_filtering_class   | Sets a FilterSet Class for filtering the value field | ```aggregated_filtering_class=ValueFilter```        |
 | aggregated_filterset_fields  | A shortcut for setting a value Filtersets            | ```aggregated_filterset_fields=[lt, lte, gt]```     |
@@ -97,9 +100,12 @@ Both model fields and annotated fields can be used.
 
         /book/aggregation/?aggregation=sum&aggregationField=price
 
-You gan also use the double underscore notation to aggregate on a related model fields.
+You gan also use the double underscore notation to aggregate on related model fields.
 
         /book/aggregation/?aggregation=sum&aggregationField=author__age
+
+If the aggregation is sum or average, the aggregation field needs to be a numeric field. If the aggregation is min or
+max, the aggregation field needs to be a date or numeric field.
 
 ## Grouping
 
@@ -117,4 +123,45 @@ To group by multiple fields, separate them with a comma.
 
         /book/aggregation/?aggregation=count&group_by=author,genre
 
-## Filtering & Ordering &#10060;
+## Filtering & Ordering
+To filter the queryset, you can use the standard Django Filter Backend.
+That implies:
+ - filtering before aggregation
+
+        /book/aggregation/?aggregation=count&group_by=author&pages__gt=100
+
+ -  filtering after aggregation
+
+        /book/aggregation/?aggregation=count&group_by=author&value__gt=5
+ - combined filtering
+
+        /book/aggregation/?aggregation=count&group_by=author&pages__gt=100&value__gt=100
+
+To control which filtering options are available, you can use the **aggregated_filtering_class** class variable.
+This sets a custom FilterSet Class for filtering the value field.
+
+```python
+class BookViewSet(GenericViewSet, AggregationMixin):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    aggregated_filtering_class = ValueFilter
+
+class ValueFilter(filters.FilterSet):
+    value__gte = filters.NumberFilter(field_name='test123', lookup_expr='gte')
+    value__lte = filters.NumberFilter(field_name='test123', lookup_expr='lte')
+
+    class Meta:
+        fields = ['test123__gte', 'test123__lte']
+```
+A shortcut for setting a value Filtersets is the **aggregated_filtering_fields** class variable.
+This automatically creates a FilterSet Class for filtering the value field.
+
+```python
+class BookViewSet(GenericViewSet, AggregationMixin):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    aggregated_filtering_fields = ['lt', 'lte', 'gt']
+```
+You can use 'lt', 'lte', 'gt', 'gte', 'exact' and '__all__' as values for the **aggregated_filtering_fields** class variable.
+
+To order the queryset, you can use the standard Django Ordering Filter.
