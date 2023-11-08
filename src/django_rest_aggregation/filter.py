@@ -2,7 +2,7 @@ from django_filters import rest_framework as filters
 
 
 def convert_to_filter_fields(fields, name):
-    if "__all__" in fields or fields == "__all__":
+    if fields == "__all__":
         fields = ['gte', 'lte', 'gt', 'lt', 'exact']
 
     filtered_fields = []

@@ -283,6 +283,7 @@ class TestFilteringAndOrdering(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, [{"group": "all", "value": 2600}])
 
+        # filtering after aggregation
         response = self.client.get("/book/aggregation/",
                                    {"aggregation": "sum", "aggregation_field": "pages", "pages__gt": 200},
                                    format="json")
@@ -443,7 +444,7 @@ class TestCustomization(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data.keys(), {"count", "next", "previous", "results"})
 
-    def test_all_field(self):
+    def test_ordering_all_field(self):
         response = self.client.get("/customized_book/aggregation/",
                                    {"aggregation": "sum", "aggregation_field": "price", "CustomizedValue__gte": 20,
                                     "ordering": "CustomizedValue"},

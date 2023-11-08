@@ -36,9 +36,10 @@ class CustomizedBookViewSet(viewsets.ModelViewSet, AggregationMixin):
     pagination_class = StandardResultsSetPagination
 
     filterset_class = BookFilter
-    ordering_fields = "__all__"
 
+    ordering_fields = "__all__"
     aggregated_filtering_fields = "__all__"
+
     aggregation_name = "CustomizedValue"
     aggregation_serializer_class = CustomAggregationSerializer
 

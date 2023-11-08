@@ -36,10 +36,10 @@ class AggregationMixin:
     def filter_aggregated_queryset(self, queryset):
 
         ordering_fields = getattr(self, "ordering_fields", [])
-        if "__all__" in ordering_fields:
+        if ordering_fields == "__all__":
             ordering_fields = queryset[0].keys()
         elif ordering_fields is not []:
-            ordering_fields = list(set(getattr(self, "ordering_fields", [])).intersection(set(queryset[0].keys())))
+            ordering_fields = list(set(ordering_fields).intersection(set(queryset[0].keys())))
 
         if (fields := getattr(self, "aggregated_filtering_fields", None)) is not None:
             ValueFilter.set_filter_fields(fields, self.get_aggregation_name())

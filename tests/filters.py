@@ -26,8 +26,8 @@ class AuthorFilter(filters.FilterSet):
 
 
 class Test123Filter(filters.FilterSet):
-    value__gte = filters.NumberFilter(field_name='test123', lookup_expr='gte')
-    value__lte = filters.NumberFilter(field_name='test123', lookup_expr='lte')
+    test123__gte = filters.NumberFilter(field_name='test123', lookup_expr='gte')
+    test123__lte = filters.NumberFilter(field_name='test123', lookup_expr='lte')
 
     class Meta:
         fields = ['test123__gte', 'test123__lte']

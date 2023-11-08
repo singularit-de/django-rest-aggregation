@@ -16,7 +16,7 @@ Key features:
 
 ## Installation
 
-For installing use pip: &#10060;
+To install, use pip: &#10060;
 
     pip install [COMING SOON] 
 
@@ -35,7 +35,7 @@ class BookViewSet(GenericViewSet, AggregationMixin):
     serializer_class = BookSerializer
 ```
 
-Register the ViewSet in your urls.py. The default aggregation endpoint is **{base_url}/aggregation/**.
+Register the ViewSet in your `urls.py`. The default aggregation endpoint is **{base_url}/aggregation/**.
 
 ```python
 router = DefaultRouter()
@@ -44,7 +44,7 @@ router.register(r'book', BookViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     # or
-    path('book/custom/endpoint/', BookViewSet.as_view({'get': 'aggregation'})
+    path('book/custom/endpoint/', BookViewSet.as_view({'get': 'aggregation'}))
 ]
 ```
 
@@ -94,18 +94,18 @@ They can be used by adding the mandatory **aggregation** parameter to the reques
 ### Aggregation Field
 
 The aggregation field is the field to aggregate on.
-It can be used by adding the **aggregationField** parameter to the request URL.
+It can be used by adding the **aggregation_field** parameter to the request URL.
 This is a mandatory parameter for the **sum**, **average**, **minimum** and **maximum** aggregations.
 Both model fields and annotated fields can be used.
 
-        /book/aggregation/?aggregation=sum&aggregationField=price
+        /book/aggregation/?aggregation=sum&aggregation_field=price
 
-You gan also use the double underscore notation to aggregate on related model fields.
+You can also use the double underscore notation to aggregate on related model fields.
 
-        /book/aggregation/?aggregation=sum&aggregationField=author__age
+        /book/aggregation/?aggregation=sum&aggregation_field=author__age
 
-If the aggregation is sum or average, the aggregation field needs to be a numeric field. If the aggregation is min or
-max, the aggregation field needs to be a date or numeric field.
+If the aggregation is sum or average, the aggregation field must be a numeric field. If the aggregation is min or
+max, the aggregation field must be date or numeric field.
 
 ## Grouping
 
@@ -153,8 +153,8 @@ class ValueFilter(filters.FilterSet):
     class Meta:
         fields = ['test123__gte', 'test123__lte']
 ```
-A shortcut for setting a value Filtersets is the **aggregated_filtering_fields** class variable.
-This automatically creates a FilterSet Class for filtering the value field.
+A shortcut for setting value Filtersets is the **aggregated_filtering_fields** class variable.
+This automatically creates a FilterSet class for filtering the value field.
 
 ```python
 class BookViewSet(GenericViewSet, AggregationMixin):
@@ -162,6 +162,13 @@ class BookViewSet(GenericViewSet, AggregationMixin):
     serializer_class = BookSerializer
     aggregated_filtering_fields = ['lt', 'lte', 'gt']
 ```
-You can use 'lt', 'lte', 'gt', 'gte', 'exact' and '__all__' as values for the **aggregated_filtering_fields** class variable.
+You can use 'lt', 'lte', 'gt', 'gte', 'exact' and  &#95;&#95;all&#95;&#95; as values for the **aggregated_filtering_fields** class variable.
 
-To order the queryset, you can use the standard Django Ordering Filter.
+To order the queryset, you can use the standard Django ordering filter.
+
+```python
+class BookViewSet(GenericViewSet, AggregationMixin):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    ordering_fields = ['value', 'grouped_by_field']
+    ```
