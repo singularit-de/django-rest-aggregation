@@ -11,16 +11,16 @@ if __name__ == "__main__":
     os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.settings'
     django.setup()
 
-    cov = Coverage(source=["src"])
-    cov.start()
+    #cov = Coverage(source=["src"])
+    #cov.start()
 
     TestRunner = get_runner(settings)
     test_runner = TestRunner()
     failures = test_runner.run_tests(["tests"])
 
-    cov.stop()
-    cov.save()
-    cov.report()
-    cov.html_report()
+    #cov.stop()
+    #cov.save()
+    #cov.report()
+    #cov.html_report()
 
     sys.exit(bool(failures))

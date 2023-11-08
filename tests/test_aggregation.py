@@ -451,3 +451,23 @@ class TestCustomization(APITestCase):
                                    format="json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["results"], [])
+
+
+
+    def test_bug(self):
+        response = self.client.get("/book/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "price",
+                                    "value__gte": 1,
+                                    },
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["results"], [{"group": "all", "CustomizedValue": '10.6'}])
+
+    def test_bug_2(self):
+        response = self.client.get("/book/aggregation/",
+                                   {"aggregation": "sum", "aggregation_field": "price", "group_by": "expensive",
+                                    "value__gte": 1,
+                                    },
+                                   format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["results"], [{"group": "all", "CustomizedValue": '10.6'}])
