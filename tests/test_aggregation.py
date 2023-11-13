@@ -452,8 +452,6 @@ class TestCustomization(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["results"], [])
 
-
-
     def test_bug(self):
         response = self.client.get("/book/aggregation/",
                                    {"aggregation": "sum", "aggregation_field": "price",

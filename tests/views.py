@@ -3,7 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
 
-from django_rest_aggregation.mixins import AggregationMixin
+from src.django_rest_aggregation.mixins import AggregationMixin
 from .filters import BookFilter, Test123Filter, AuthorFilter
 from .models import Book, Store, Author
 from .pagination import StandardResultsSetPagination
@@ -18,7 +18,7 @@ class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
 
     filterset_class = BookFilter
     ordering_fields = "__all__"
-    aggregated_filtering_fields = ["gte", "lte", "gt", "lt", "exact"]
+    aggregated_filterset_fields = ["gte", "lte", "gt", "lt", "exact"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -38,7 +38,7 @@ class CustomizedBookViewSet(viewsets.ModelViewSet, AggregationMixin):
     filterset_class = BookFilter
 
     ordering_fields = "__all__"
-    aggregated_filtering_fields = "__all__"
+    aggregated_filterset_fields = "__all__"
 
     aggregation_name = "CustomizedValue"
     aggregation_serializer_class = CustomAggregationSerializer
