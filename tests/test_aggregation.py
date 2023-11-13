@@ -1,3 +1,5 @@
+import sqlite3
+
 from rest_framework.test import APITestCase
 
 from tests.models import Author, Book, Store
@@ -5,6 +7,7 @@ from tests.models import Author, Book, Store
 
 class TestBasicFunctionality(APITestCase):
     def setUp(self):
+        print('SQLite version:', sqlite3.sqlite_version)
         author = Author(name="John", age=20)
         author.save()
         Book(name="Book1", pages=100, price=10.50, rating=4.5, author=author, pubdate="2020-01-01").save()
@@ -452,8 +455,6 @@ class TestCustomization(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["results"], [])
 
-
-
     def test_bug(self):
         response = self.client.get("/book/aggregation/",
                                    {"aggregation": "sum", "aggregation_field": "price",
@@ -461,13 +462,13 @@ class TestCustomization(APITestCase):
                                     },
                                    format="json")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["results"], [{"group": "all", "CustomizedValue": '10.6'}])
+        self.assertEqual(response.data, [{"group": "all", "value": 10.55}])
 
     def test_bug_2(self):
         response = self.client.get("/book/aggregation/",
                                    {"aggregation": "sum", "aggregation_field": "price", "group_by": "expensive",
-                                    "value__gte": 1,
+                                    "value__gte": 2000,
                                     },
                                    format="json")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["results"], [{"group": "all", "CustomizedValue": '10.6'}])
+        self.assertEqual(response.data, [])

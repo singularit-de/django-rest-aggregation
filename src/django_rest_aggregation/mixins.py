@@ -41,11 +41,12 @@ class AggregationMixin:
         elif ordering_fields is not []:
             ordering_fields = list(set(ordering_fields).intersection(set(queryset[0].keys())))
 
-        if (fields := getattr(self, "aggregated_filtering_fields", None)) is not None:
+        if (fields := getattr(self, "aggregated_filterset_fields", None)) is not None:
             ValueFilter.set_filter_fields(fields, self.get_aggregation_name())
         filterset_class = getattr(self, "aggregated_filterset_class", ValueFilter)
 
         helper_view = HelperView(ordering_fields, filterset_class)
+
         for backend in list(self.filter_backends):
             queryset = backend().filter_queryset(self.request, queryset, helper_view)
         return queryset
