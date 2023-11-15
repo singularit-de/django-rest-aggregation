@@ -1,5 +1,5 @@
-import sqlite3
-
+from django.conf import settings
+from django.db import connection
 from rest_framework.test import APITestCase
 
 from tests.models import Author, Book, Store
@@ -7,7 +7,6 @@ from tests.models import Author, Book, Store
 
 class TestBasicFunctionality(APITestCase):
     def setUp(self):
-        print('SQLite version:', sqlite3.sqlite_version)
         author = Author(name="John", age=20)
         author.save()
         Book(name="Book1", pages=100, price=10.50, rating=4.5, author=author, pubdate="2020-01-01").save()
@@ -15,6 +14,12 @@ class TestBasicFunctionality(APITestCase):
         Book(name="Book3", pages=300, price=19.99, rating=3.5, author=author, pubdate="2020-01-03").save()
         Book(name="Book4", pages=400, price=9.99, rating=3.0, author=author, pubdate="2020-01-04").save()
         Book(name="Book5", pages=500, price=23.99, rating=2.5, author=author, pubdate="2020-01-05").save()
+
+    def test_database(self):
+        print("\n--- Database ---")
+        print(connection.vendor)
+        print(connection.get_database_version())
+        print("----------------\n")
 
     def test_count(self):
         response = self.client.get("/book/aggregation/", {"aggregation": "count"}, format="json")
@@ -123,13 +128,20 @@ class TestGroupingAndAnnotations(APITestCase):
         Book(name="Book4", pages=400, price=09.99, rating=3.0, author=self.author2, pubdate="2020-01-04").save()
         Book(name="Book5", pages=500, price=23.99, rating=2.5, author=self.author2, pubdate="2020-01-05").save()
 
+        book1 = Book.objects.get(name="Book1")
+        book3 = Book.objects.get(name="Book3")
+        book5 = Book.objects.get(name="Book5")
+
+        book2 = Book.objects.get(name="Book2")
+        book4 = Book.objects.get(name="Book4")
+
         store = Store(name="Store1")
         store.save()
-        store.books.set([1, 3, 5])
+        store.books.set([book1, book3, book5])
 
         store = Store(name="Store2")
         store.save()
-        store.books.set([2, 4])
+        store.books.set([book2, book4])
 
     def test_group_by(self):
         # Simple Group by
@@ -263,13 +275,22 @@ class TestFilteringAndOrdering(APITestCase):
         Book(name="Book7", pages=700, price=16.00, rating=4.7, author=self.author2, pubdate="2020-01-07").save()
         Book(name="Book8", pages=800, price=28.99, rating=3.9, author=self.author2, pubdate="2020-01-08").save()
 
-        store = Store(name="Store1")
-        store.save()
-        store.books.set([1, 3, 5, 7])
+        book1 = Book.objects.get(name="Book1")
+        book2 = Book.objects.get(name="Book2")
+        book3 = Book.objects.get(name="Book3")
+        book4 = Book.objects.get(name="Book4")
+        book5 = Book.objects.get(name="Book5")
+        book6 = Book.objects.get(name="Book6")
+        book7 = Book.objects.get(name="Book7")
+        book8 = Book.objects.get(name="Book8")
 
-        store = Store(name="Store2")
-        store.save()
-        store.books.set([2, 4, 6, 8])
+        self.store = Store(name="Store1")
+        self.store.save()
+        self.store.books.set([book1, book3, book5, book7])
+
+        self.store2 = Store(name="Store2")
+        self.store2.save()
+        self.store2.books.set([book2, book4, book6, book8])
 
     def test_filter_before_aggregation(self):
         # filtering before aggregation
@@ -301,7 +322,8 @@ class TestFilteringAndOrdering(APITestCase):
                                    format="json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data,
-                         [{'author': 1, 'stores': 1, 'value': 400}, {'author': 1, 'stores': 2, 'value': 600}])
+                         [{'author': self.author.pk, 'stores': 1, 'value': 400},
+                          {'author': self.author.pk, 'stores': 2, 'value': 600}])
 
         # value__gte
         response = self.client.get("/book/aggregation/",
