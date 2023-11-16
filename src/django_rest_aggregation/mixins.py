@@ -36,6 +36,8 @@ class AggregationMixin:
     def filter_aggregated_queryset(self, queryset):
 
         ordering_fields = getattr(self, "ordering_fields", [])
+        valid_fields = queryset[0].keys()
+
         if ordering_fields == "__all__":
             ordering_fields = queryset[0].keys()
         elif ordering_fields is not []:
@@ -49,6 +51,10 @@ class AggregationMixin:
 
         for backend in list(self.filter_backends):
             queryset = backend().filter_queryset(self.request, queryset, helper_view)
+
+        if not queryset.ordered:
+            queryset = queryset.order_by(*valid_fields)
+
         return queryset
 
 
