@@ -39,8 +39,8 @@ class AggregationMixin:
         valid_fields = queryset[0].keys()
 
         if ordering_fields == "__all__":
-            ordering_fields = queryset[0].keys()
-        elif ordering_fields is not []:
+            ordering_fields = valid_fields
+        else:
             ordering_fields = list(set(ordering_fields).intersection(set(queryset[0].keys())))
 
         if (fields := getattr(self, "aggregated_filterset_fields", None)) is not None:

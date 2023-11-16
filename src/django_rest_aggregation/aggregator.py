@@ -3,7 +3,7 @@ from django.db import models
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
-from src.django_rest_aggregation.enums import Aggregation
+from django_rest_aggregation.enums import Aggregation
 
 
 def get_filtered_params(request):

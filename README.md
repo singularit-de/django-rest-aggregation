@@ -171,4 +171,7 @@ class BookViewSet(GenericViewSet, AggregationMixin):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     ordering_fields = ['value', 'grouped_by_field']
-    ```
+```
+
+``ordering_fields = __all__`` is also possible.
+
