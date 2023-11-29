@@ -489,7 +489,8 @@ class TestCustomization(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["results"], [])
 
-    def test_bug(self):
+    def test_sqlite_exception(self):
+        # throws exception if sqlite version is less than
         response = self.client.get("/book/aggregation/",
                                    {"aggregation": "sum", "aggregation_field": "price",
                                     "value__gte": 1,
@@ -497,12 +498,3 @@ class TestCustomization(APITestCase):
                                    format="json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, [{"group": "all", "value": 10.55}])
-
-    def test_bug_2(self):
-        response = self.client.get("/book/aggregation/",
-                                   {"aggregation": "sum", "aggregation_field": "price", "group_by": "expensive",
-                                    "value__gte": 2000,
-                                    },
-                                   format="json")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, [])

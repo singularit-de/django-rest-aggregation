@@ -1,4 +1,3 @@
 -r requirements.txt
-django-filter~=23.3
-parameterized==0.9.0
 coverage==7.3.2
+psycopg2==2.9.9
