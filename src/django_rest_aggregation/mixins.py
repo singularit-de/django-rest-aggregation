@@ -34,7 +34,6 @@ class AggregationMixin:
         return "value"
 
     def filter_aggregated_queryset(self, queryset):
-
         ordering_fields = getattr(self, "ordering_fields", [])
         valid_fields = queryset[0].keys()
 

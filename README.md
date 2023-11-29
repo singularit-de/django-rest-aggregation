@@ -29,7 +29,6 @@ from django_rest_aggregation.mixins import AggregationMixin
 
 ...
 
-
 class BookViewSet(GenericViewSet, AggregationMixin):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
@@ -66,7 +65,7 @@ Get the aggregation results by sending a GET request to the aggregation endpoint
 | aggregation       | determines the type of aggregation         | ```aggregation=sum```         |
 | aggregation_field | the field to aggregate on                  | ```aggregation_field=price``` |
 | group_by          | the field on which the queryset is grouped | ```group_by=author```         |
-| value             | a value to filter the queryset             | ```value__gt=1000```          |
+| value             | the value to filter the queryset           | ```value__gt=1000```          |
 
 ### View Class Variables
 
