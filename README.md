@@ -1,1 +1,2 @@
 # django-rest-aggregation
+test
