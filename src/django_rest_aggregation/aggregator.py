@@ -12,8 +12,9 @@ def get_filtered_params(request):
         if len(request.query_params.getlist(key, [])) == 1:
             params[key] = request.query_params.getlist(key)[0]
         if len(request.query_params.getlist(key, [])) > 1:
-            error_message = f"Only one {key} is allowed" if key != "group_by" else \
-                "please use comma separated values for grouping"
+            error_message = (
+                f"Only one {key} is allowed" if key != "group_by" else "please use comma separated values for grouping"
+            )
             raise ValidationError({"error": error_message})
 
     if params.get("group_by", None) is not None:
@@ -26,7 +27,7 @@ def get_annotation(params, name):
     aggregation_field = params.get("aggregation_field")
 
     if aggregation in Aggregation.COUNT.value:
-        return {name: models.Count('id')}
+        return {name: models.Count("id")}
 
     if aggregation in Aggregation.SUM.value:
         return {name: models.Sum(aggregation_field)}
@@ -87,31 +88,37 @@ class Aggregator:
         return self.queryset.values(*group_by).annotate(**get_annotation(self.params, self.aggregation_name))
 
     def validate_params(self):
-
         # check if aggregation is in params and is valid
         if (aggregation := self.params.get("aggregation", None)) is None:
             raise ValidationError({"error": "'aggregation' is required"})
         if aggregation not in Aggregation.get_all_aggregations():
             raise ValidationError(
-                {"error": f"'aggregation' must be one of {sorted(Aggregation.get_all_aggregations())}"})
+                {"error": f"'aggregation' must be one of {sorted(Aggregation.get_all_aggregations())}"}
+            )
 
         # check if aggregation_field is in params and valid
         if aggregation in Aggregation.get_field_required_aggregations():
             if (aggregation_field := self.params.get("aggregation_field", None)) is None:
                 raise ValidationError({"error": "'aggregation_field' is required"})
             if not field_exists(aggregation_field, self.model, self.queryset):
-                raise ValidationError(
-                    {"error": f"'aggregation_field' is not valid"})
+                raise ValidationError({"error": "'aggregation_field' is not valid"})
 
             # check if aggregation_field is correct type
             if aggregation in Aggregation.get_number_field_required_aggregations():
-                if get_field_type(aggregation_field, self.model, self.queryset) not in ["FloatField", "IntegerField",
-                                                                                        "DecimalField"]:
+                if get_field_type(aggregation_field, self.model, self.queryset) not in [
+                    "FloatField",
+                    "IntegerField",
+                    "DecimalField",
+                ]:
                     raise ValidationError({"error": "'aggregation_field' must be a number field"})
             else:
-                if get_field_type(aggregation_field, self.model, self.queryset) not in ["FloatField", "IntegerField",
-                                                                                        "DecimalField", "DateField",
-                                                                                        "DateTimeField"]:
+                if get_field_type(aggregation_field, self.model, self.queryset) not in [
+                    "FloatField",
+                    "IntegerField",
+                    "DecimalField",
+                    "DateField",
+                    "DateTimeField",
+                ]:
                     raise ValidationError({"error": "'aggregation_field' must be a number or a date field"})
 
         # check if group_by is valid
