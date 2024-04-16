@@ -20,5 +20,9 @@ class Aggregation(Enum):
 
     @classmethod
     def get_number_field_required_aggregations(cls):
-        return {value for aggregation in cls for value in aggregation.value
-                if value not in {*cls.COUNT.value, *cls.MIN.value, *cls.MAX.value}}
+        return {
+            value
+            for aggregation in cls
+            for value in aggregation.value
+            if value not in {*cls.COUNT.value, *cls.MIN.value, *cls.MAX.value}
+        }

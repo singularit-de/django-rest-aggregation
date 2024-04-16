@@ -16,8 +16,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-
 #Todo
-#[project.urls]
-#"Homepage" = "https://github.com/pypa/sampleproject"
-#"Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
+[project.urls]
+"Homepage" = "https://github.com/singularit-de/django-rest-aggregation/"
+"Bug Tracker" = "https://github.com/singularit-de/django-rest-aggregation/issues"

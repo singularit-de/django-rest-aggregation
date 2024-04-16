@@ -22,11 +22,14 @@ class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.annotate(price_per_page=F('price') / F('pages'),
-                                     expensive=Case(
-                                         When(price__gt=17, then=Value("expensive")),
-                                         default=Value("not expensive"),
-                                         output_field=CharField()))
+        queryset = queryset.annotate(
+            price_per_page=F("price") / F("pages"),
+            expensive=Case(
+                When(price__gt=17, then=Value("expensive")),
+                default=Value("not expensive"),
+                output_field=CharField(),
+            ),
+        )
 
         return queryset
 
@@ -47,11 +50,14 @@ class CustomizedBookViewSet(viewsets.ModelViewSet, AggregationMixin):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.annotate(price_per_page=F('price') / F('pages'),
-                                 expensive=Case(
-                                     When(price__gt=17, then=Value(True)),
-                                     default=Value(False),
-                                     output_field=BooleanField()))
+        return queryset.annotate(
+            price_per_page=F("price") / F("pages"),
+            expensive=Case(
+                When(price__gt=17, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            ),
+        )
 
 
 class StoreViewSet(viewsets.ModelViewSet, AggregationMixin):
