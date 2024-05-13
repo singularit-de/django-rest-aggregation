@@ -16,9 +16,9 @@ Key features:
 
 ## Installation
 
-To install, use pip: &#10060;
+To install, use pip
 
-    pip install [COMING SOON] 
+    pip install django-rest-aggregation
 
 ## Quickstart
 

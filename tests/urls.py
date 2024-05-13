@@ -4,7 +4,7 @@ from .views import BookViewSet, StoreViewSet, AuthorViewSet, CustomizedBookViewS
 
 router = DefaultRouter()
 router.register(r"book", BookViewSet)
-router.register(r"customized_book", CustomizedBookViewSet)
+router.register(r"customized_book", CustomizedBookViewSet, basename="customized_book")
 router.register(r"store", StoreViewSet)
 router.register(r"author", AuthorViewSet)
 

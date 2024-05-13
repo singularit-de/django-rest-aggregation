@@ -49,7 +49,7 @@ mssql = {
     "PORT": "1433",
 }
 
-DATABASES = {"default": postgres}
+DATABASES = {"default": sqlite}
 
 ROOT_URLCONF = "tests.urls"
 
