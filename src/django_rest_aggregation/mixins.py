@@ -1,3 +1,4 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -9,7 +10,10 @@ from .serializers import AggregationSerializer
 class AggregationMixin:
     @action(methods=["get"], detail=False, url_path="aggregation", url_name="aggregation")
     def aggregation(self, request):
-        queryset = self.filter_queryset(self.get_queryset()).order_by()
+        queryset = self.get_queryset()
+
+        if DjangoFilterBackend in self.filter_backends:
+            queryset = DjangoFilterBackend().filter_queryset(request, queryset, self)
 
         aggregator = Aggregator(request, queryset, self.get_aggregation_name())
         filtered_queryset = self.filter_aggregated_queryset(aggregator.get_aggregated_queryset())
