@@ -10,7 +10,7 @@ from .serializers import AggregationSerializer
 class AggregationMixin:
     @action(methods=["get"], detail=False, url_path="aggregation", url_name="aggregation")
     def aggregation(self, request):
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().order_by()
 
         if DjangoFilterBackend in self.filter_backends:
             queryset = DjangoFilterBackend().filter_queryset(request, queryset, self)
@@ -43,12 +43,12 @@ class AggregationMixin:
 
     def filter_aggregated_queryset(self, queryset):
         ordering_fields = getattr(self, "ordering_fields", [])
-        valid_fields = queryset[0].keys()
+        valid_fields = queryset[0].keys() if queryset.exists() else []
 
         if ordering_fields == "__all__":
             ordering_fields = valid_fields
         else:
-            ordering_fields = list(set(ordering_fields).intersection(set(queryset[0].keys())))
+            ordering_fields = list(set(ordering_fields).intersection(set(valid_fields)))
 
         if (fields := getattr(self, "aggregated_filterset_fields", None)) is not None:
             ValueFilter.set_filter_fields(fields, self.get_aggregation_name())

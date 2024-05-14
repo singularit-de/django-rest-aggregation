@@ -1,5 +1,6 @@
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
+from django.db.models import Case, When, Value
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
@@ -83,7 +84,9 @@ class Aggregator:
         self.validate_params()
 
         if (group_by := self.params.get("group_by", ["group"])) == ["group"]:
-            self.queryset = self.queryset.annotate(group=models.Value("all", output_field=models.CharField()))
+            self.queryset = self.queryset.annotate(group=Case(
+                When(pk__isnull=False, then=Value("all")),
+                default=Value("test")))
 
         return self.queryset.values(*group_by).annotate(**get_annotation(self.params, self.aggregation_name))
 
