@@ -18,11 +18,15 @@ class AggregationMixin:
         aggregator = Aggregator(request, queryset, self.get_aggregation_name())
         filtered_queryset = self.filter_aggregated_queryset(aggregator.get_aggregated_queryset())
 
+        context = {
+            "request": request,
+            "name": self.get_aggregation_name()
+        }
         page = self.paginate_queryset(filtered_queryset)
         if page is not None:
-            serializer = self.get_aggregation_serializer_class(page, many=True)
+            serializer = self.get_aggregation_serializer_class(page, many=True, context=context)
             return self.get_paginated_response(serializer.data)
-        serializer = self.get_aggregation_serializer_class(filtered_queryset, many=True)
+        serializer = self.get_aggregation_serializer_class(filtered_queryset, many=True, context=context)
         return Response(serializer.data)
 
     def get_aggregation_serializer_class(self, *args, **kwargs):

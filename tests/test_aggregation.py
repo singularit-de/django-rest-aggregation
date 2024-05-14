@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import connection
 from rest_framework.test import APITestCase
 
@@ -152,7 +154,7 @@ class TestBasicFunctionality(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, [{"group": "all", "value": "2020-01-01"}])
+        self.assertEqual(response.data, [{"group": "all", "value": datetime.date(2020, 1, 1)}])
 
     def test_maximum(self):
         # Maximum of IntegerField
@@ -189,7 +191,7 @@ class TestBasicFunctionality(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, [{"group": "all", "value": "2020-01-05"}])
+        self.assertEqual(response.data, [{"group": "all", "value": datetime.date(2020, 1, 5)}])
 
 
 class TestGroupingAndAnnotations(APITestCase):
@@ -884,16 +886,16 @@ class TestCustomization(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["results"], [])
 
-    def test_sqlite_exception(self):
-        # throws exception if sqlite version is less than
+    def test_pagiation_count(self):
         response = self.client.get(
-            "/book/aggregation/",
+            "/customized_book/aggregation/",
             {
                 "aggregation": "sum",
                 "aggregation_field": "price",
-                "value__gte": 1,
+                "ordering": "CustomizedValue",
+                "CustomizedValue__lte": 0,
             },
             format="json",
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, [{"group": "all", "value": 10.55}])
+        self.assertEqual(response.data["count"], 0)
