@@ -60,13 +60,15 @@ class AggregationMixin:
         return queryset
 
     def remove_invalid_ordering_fields(self, queryset, fields):
-        valid_fields = getattr(self, "aggregated_ordering_fields", None) or (
-            queryset[0].keys() if queryset.exists() else [])
+        ordering_fields = getattr(self, "aggregated_ordering_fields", None) or getattr(self, "ordering_fields", None)
+
+        if not ordering_fields or ("__all__" in ordering_fields) or (ordering_fields == "__all__"):
+            return fields
 
         def term_valid(term):
             if term.startswith("-"):
                 term = term[1:]
-            return term in valid_fields
+            return term in ordering_fields
 
         return [term for term in fields if term_valid(term)]
 
