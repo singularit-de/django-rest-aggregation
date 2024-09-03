@@ -163,14 +163,21 @@ class BookViewSet(GenericViewSet, AggregationMixin):
 ```
 You can use 'lt', 'lte', 'gt', 'gte', 'exact' and  &#95;&#95;all&#95;&#95; as values for the **aggregated_filtering_fields** class variable.
 
-To order the queryset, you can use the standard Django ordering filter.
-
+Fields available for ordering the result are taken from the `aggregated_ordering_fields` attribute.
 ```python
 class BookViewSet(GenericViewSet, AggregationMixin):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    ordering_fields = ['value', 'grouped_by_field']
+    aggregated_ordering_fields = ['value', 'grouped_by_field']
 ```
-
+if this is not set available fields are taken from the usual `ordering_fields` attribute.
+The reason for this behaviour is to accommodate interplay with the often used `OrderingFilter` 
+```python
+class BookViewSet(GenericViewSet, AggregationMixin):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    ordering_fields = ['page_count', 'author']
+```
+If no ordering fields of any kind are specified or the list contains `"__all__"` any passed ordering will be tried to be applied.
 ``ordering_fields = __all__`` is also possible.
 
