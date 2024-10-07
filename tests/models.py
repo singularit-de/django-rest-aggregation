@@ -1,9 +1,18 @@
 from django.db import models
 
 
+class Agent(models.Model):
+    name = models.CharField(max_length=300)
+    address = models.CharField(max_length=300)
+
+    def __str__(self):
+        return self.name
+
+
 class Author(models.Model):
     name = models.CharField(max_length=100)
     age = models.IntegerField()
+    agent =models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.name

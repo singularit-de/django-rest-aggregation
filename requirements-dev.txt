@@ -1,5 +1,5 @@
 -r requirements.txt
 coverage==7.3.2
-psycopg2==2.9.9
+psycopg2-binary
 mssql-django==1.5
 ruff==0.3.7

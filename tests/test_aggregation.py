@@ -3,7 +3,7 @@ import datetime
 from django.db import connection
 from rest_framework.test import APITestCase
 
-from tests.models import Author, Book, Store
+from tests.models import Author, Book, Store, Agent
 
 
 class TestBasicFunctionality(APITestCase):
@@ -455,9 +455,13 @@ class TestValidation(APITestCase):
 
 class TestFilteringAndOrdering(APITestCase):
     def setUp(self):
-        self.author = Author(name="John", age=20)
+        self.agent1 = Agent(name="Adalbert Erl", address="Bookstreet 12")
+        self.agent1.save()
+        self.agent2 = Agent(name="Balthasar König", address="Pagepassage 98")
+        self.agent2.save()
+        self.author = Author(name="John", age=20, agent=self.agent1)
         self.author.save()
-        self.author2 = Author(name="Jane", age=30)
+        self.author2 = Author(name="Jane", age=30, agent=self.agent2)
         self.author2.save()
 
         Book(
@@ -824,6 +828,28 @@ class TestFilteringAndOrdering(APITestCase):
             ],
         )
 
+    def test_multi_relation_ordering(self):
+        response = self.client.get(
+            "/book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "pages",
+                "group_by": "author__name,stores",
+                "ordering": "author__agent__name",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data,
+            [
+                {"author__name": "John", "stores": self.store.pk, "value": 400},
+                {"author__name": "John", "stores": self.store2.pk, "value": 600},
+                {"author__name": "Jane", "stores": self.store.pk, "value": 1200},
+                {"author__name": "Jane", "stores": self.store2.pk, "value": 1400},
+            ],
+        )
+
 
 class TestCustomization(APITestCase):
     def setUp(self):
@@ -886,7 +912,7 @@ class TestCustomization(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["results"], [])
 
-    def test_pagiation_count(self):
+    def test_pagination_count(self):
         response = self.client.get(
             "/customized_book/aggregation/",
             {
