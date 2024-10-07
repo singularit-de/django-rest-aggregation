@@ -50,7 +50,7 @@ class AggregationMixin:
         return queryset
 
     def order_aggregated_queryset(self, queryset):
-        params = self.request.query_params.get("order_by")
+        params = self.request.query_params.get("ordering")
         if params:
             fields = [param.strip() for param in params.split(',')]
             ordering = self.remove_invalid_ordering_fields(queryset, fields)
