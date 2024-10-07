@@ -4,7 +4,7 @@ from django.db.models import Case, When, Value
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
-from django_rest_aggregation.enums import Aggregation
+from .enums import Aggregation
 
 
 def get_filtered_params(request):
