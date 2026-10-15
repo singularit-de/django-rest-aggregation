@@ -3,7 +3,7 @@
 Add `AggregationMixin` to a ViewSet. It adds a `GET` action named `aggregation`.
 
 ```python
-from django_rest_aggregation.mixins import AggregationMixin
+from django_rest_aggregation import AggregationMixin
 from rest_framework.viewsets import GenericViewSet
 
 

@@ -30,7 +30,7 @@ Review of v0.4.0 (commit `20df1d3`), 2026-10-15.
 | [PKG-2](#pkg-2-supported-versions-are-out-of-date) | high | Django 4.2 / Python 3.8 are EOL | **fixed** |
 | [PKG-3](#pkg-3-tests-import-from-src) | low | Tests import `src.` | **fixed** |
 | [PKG-4](#pkg-4-no-ci-for-tests) | medium | No test CI | **fixed** |
-| [PKG-5](#pkg-5-packaging-metadata-and-tooling) | low | Metadata and tooling | – |
+| [PKG-5](#pkg-5-packaging-metadata-and-tooling) | low | Metadata and tooling | **fixed** |
 | [PKG-6](#pkg-6-readme-links-on-pypi) | low | Relative README links on PyPI | – |
 | [OPT](#optimizations-and-ideas) | – | Optimizations and ideas | – |
 
@@ -224,8 +224,14 @@ writing.
 
 - `pyproject.toml`: leftover `#Todo`, no `license`, no `__version__`.
 - `__init__.py` is empty; users import from `django_rest_aggregation.mixins`.
-- ~~`runtests.py` contains commented-out coverage code; the SQLite DB is written to the repo root.~~
-  Fixed: coverage is configured in `pyproject.toml`, tests use an in-memory SQLite DB.
+- `runtests.py` contains commented-out coverage code; the SQLite DB is written to the repo root.
+
+**Fixed:** `pyproject.toml` declares `license = "MIT"` and `license-files` (PEP 639, setuptools ≥ 77; the
+license classifier was dropped, as PEP 639 requires) and the `#Todo` is gone. `django_rest_aggregation.__version__`
+reads the installed version, so `pyproject.toml` stays the only place to bump it. `AggregationMixin` can be
+imported from the package root (lazily, so importing the package does not need Django settings);
+`django_rest_aggregation.mixins` keeps working. Coverage is configured in `pyproject.toml` and tests use an
+in-memory SQLite DB.
 
 ## PKG-6 README links on PyPI
 

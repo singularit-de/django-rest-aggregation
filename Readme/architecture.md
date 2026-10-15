@@ -4,6 +4,7 @@ Package: `src/django_rest_aggregation/` (about 300 lines).
 
 | Module | Contents |
 |--------|----------|
+| `__init__.py` | `__version__` (from the installed metadata), lazy re-export of `AggregationMixin` |
 | `mixins.py` | `AggregationMixin` (the `aggregation` action, post-filtering, ordering), `HelperView` |
 | `aggregator.py` | `Aggregator` (validation + `.values().annotate()`), parameter parsing, field lookup helpers |
 | `enums.py` | `Aggregation` enum with names and aliases |
