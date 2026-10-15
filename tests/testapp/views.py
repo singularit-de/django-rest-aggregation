@@ -11,6 +11,7 @@ from .pagination import StandardResultsSetPagination
 from .serializers import (
     AuthorSerializer,
     BookSerializer,
+    BookSummarySerializer,
     CustomAggregationSerializer,
     PublisherSerializer,
     StoreSerializer,
@@ -52,6 +53,13 @@ class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
         )
 
         return queryset
+
+
+class ModelsBookViewSet(viewsets.ModelViewSet, AggregationMixin):
+    queryset = Book.objects.all()
+    serializer_class = BookSummarySerializer
+    # Book fields come from the serializer; Author and Store are released as a whole, Agent is not.
+    aggregation_models = [Author, "testapp.Store"]
 
 
 class CustomizedBookViewSet(viewsets.ModelViewSet, AggregationMixin):

@@ -32,6 +32,8 @@ DATE_FIELD_TYPES = {"DateField", "DateTimeField"}
 
 # Field paths a client may use in group_by and aggregation_field; "__all__" allows every model field and annotation.
 AllowedFields = Collection[str] | Literal["__all__"]
+# Models whose fields a client may reach through relation paths, in addition to the allowed fields.
+AllowedModels = Collection[type[models.Model]]
 DEFAULT_MAX_GROUP_BY = 3
 
 
@@ -100,6 +102,26 @@ def get_model_field(
     return field
 
 
+def get_path_models(field_name: str, model: type[models.Model]) -> list[type[models.Model]]:
+    """Return the models a ``__``-separated field path passes through after ``model``.
+
+    The last entry is the model that owns the last field.
+
+    ``author__agent__name`` on ``Book`` gives ``[Author, Agent]``, a plain field gives ``[]``.
+    Raises ``FieldDoesNotExist`` if a part is missing.
+    """
+    path_models = []
+    current = model
+    for part in field_name.split("__")[:-1]:
+        related_model = current._meta.get_field(part).related_model
+        if not isinstance(related_model, type):
+            # not a relation, so the path cannot continue
+            raise FieldDoesNotExist(f"{field_name!r} is not a valid field path")
+        current = related_model
+        path_models.append(current)
+    return path_models
+
+
 def model_field_exists(field_name: str, model: type[models.Model]) -> bool:
     try:
         get_model_field(field_name, model)
@@ -136,21 +158,45 @@ class Aggregator:
         aggregation_name: str,
         *,
         allowed_fields: AllowedFields,
+        allowed_models: AllowedModels = (),
         max_group_by: int | None = DEFAULT_MAX_GROUP_BY,
     ) -> None:
-        """``allowed_fields`` has no default on purpose: callers decide which fields clients may use."""
+        """Restrict the field paths clients may use in ``group_by`` and ``aggregation_field``.
+
+        ``allowed_fields`` lists the allowed paths, or is ``"__all__"``.
+        ``allowed_models`` also allows a relation path if every model it passes through after the
+                           queryset's model is listed.
+        """
         self.params = get_filtered_params(request)
         self.queryset = queryset
         self.model: type[models.Model] = queryset.model
         self.aggregation_name = aggregation_name
         self.allowed_fields = allowed_fields
+        self.allowed_models = allowed_models
         self.max_group_by = max_group_by
 
     def field_allowed(self, field_name: str) -> bool:
         """Field exists and the view allows it. Disallowed fields get the same error as unknown ones."""
-        if self.allowed_fields != "__all__" and field_name not in self.allowed_fields:
+        if not field_exists(field_name, self.model, self.queryset):
             return False
-        return field_exists(field_name, self.model, self.queryset)
+        if self.allowed_fields == "__all__" or field_name in self.allowed_fields:
+            return True
+        return self.path_models_allowed(field_name)
+
+    def path_models_allowed(self, field_name: str) -> bool:
+        """Whether every model the path passes through after the queryset's model is in ``allowed_models``.
+
+        The queryset's model gets no exception: a path back to it (``stores__books__…``) needs it listed too,
+        otherwise it would bypass the field allowlist. Fields of the model itself and annotations are never
+        allowed here.
+        """
+        if not self.allowed_models:
+            return False
+        try:
+            path_models = get_path_models(field_name, self.model)
+        except FieldDoesNotExist:
+            return False
+        return bool(path_models) and all(model in self.allowed_models for model in path_models)
 
     def get_aggregated_queryset(self) -> models.QuerySet[Any, dict[str, Any]]:
         self.validate_params()
