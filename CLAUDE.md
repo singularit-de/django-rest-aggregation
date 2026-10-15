@@ -18,16 +18,22 @@ about 300 lines in `src/django_rest_aggregation/`.
 
 ```bash
 uv sync                                 # creates .venv: package, runtime deps, dev group
-uv run runtests.py                      # Django test runner, settings: tests.settings, SQLite by default
+uv run runtests.py                      # = manage.py test with tests.settings; args are passed through
+uv run coverage run runtests.py && uv run coverage report
 uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); also runs as pre-commit hook and in CI
 ```
 
 - uv only, no pip / `requirements*.txt`. Dependencies are in `pyproject.toml` (`dependencies`, `[dependency-groups]`
   `dev`, `postgres`, `mssql`); `uv.lock` is committed.
-- Run tests from the repo root: `tests/views.py` imports `src.django_rest_aggregation` (PKG-3).
-- `test_sum` and `test_avg` currently fail on exact float comparison (BUG-14); everything else passes on
-  Python 3.10–3.14 with Django 5.2 and 6.1.
-- `runtests.py` writes `db.sqlite3` into the repo root; it is gitignored.
+- Tests import the installed package (`django_rest_aggregation`, editable via `uv sync`), not `src.`.
+- Database: in-memory SQLite by default; `DB_BACKEND=postgres|mysql|mariadb|mssql` plus optional
+  `DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT` select another one (`tests/settings.py`).
+- Test layout: `tests/settings.py`, the test app `tests/testapp/` (models, views, urls, serializers, filters,
+  pagination), helpers and shared fixtures in `tests/base.py`, tests in `tests/test_<topic>.py`.
+- Test conventions: fixtures in `setUpTestData`, URLs via
+  `reverse("<basename>-aggregation")`, helpers `get_rows` / `get_error` / `assertRows` on `AggregationTestCase`,
+  `subTest` for case tables. Floats are compared rounded; results without a total `ordering` are compared with
+  `ordered=False`, because row order is not defined across databases.
 
 ## Code map
 
@@ -52,8 +58,8 @@ uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); als
 - Runtime dependencies are lower bounds only (library, no `~=` pins): Python ≥ 3.10, Django ≥ 5.2, DRF ≥ 3.16,
   django-filter ≥ 25.1 (first releases supporting Django 5.2). Keep `classifiers` in sync when support changes.
   Maintenance priority: PKG-4, then SEC-1, BUG-1, BUG-2.
-- Behaviour changes need a test in `tests/test_aggregation.py` (test app models: `Agent`, `Author`, `Book`,
-  `Store`; ViewSets in `tests/views.py`).
+- Behaviour changes need a test in the matching `tests/test_<topic>.py` (test app models: `Agent`, `Author`,
+  `Book`, `Store`; ViewSets in `tests/testapp/views.py`).
 - Release: bump `version` in `pyproject.toml`, create a GitHub release → `publish.yml` uploads to PyPI.
   CI (`ci.yml`) only runs ruff, no tests yet (PKG-4), so run tests locally before releasing.
 - Commit style: conventional prefixes (`feat:`, `fix:`, `chore:`, `refactor:`, `test:`).

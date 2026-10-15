@@ -3,13 +3,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 
-from src.django_rest_aggregation.mixins import AggregationMixin
+from django_rest_aggregation.mixins import AggregationMixin
 
 from .filters import AuthorFilter, BookFilter, Test123Filter
 from .models import Author, Book, Store
 from .pagination import StandardResultsSetPagination
-from .serializer import AuthorSerializer, BookSerializer, StoreSerializer
-from .serializers import CustomAggregationSerializer
+from .serializers import AuthorSerializer, BookSerializer, CustomAggregationSerializer, StoreSerializer
 
 
 class BookViewSet(viewsets.ModelViewSet, AggregationMixin):

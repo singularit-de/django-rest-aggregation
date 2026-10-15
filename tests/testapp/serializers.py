@@ -3,6 +3,29 @@ import decimal
 from rest_framework import serializers
 from rest_framework.serializers import BaseSerializer
 
+from .models import Author, Book, Store
+
+
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = "__all__"
+
+
+class BookSerializer(serializers.ModelSerializer):
+    price_per_page = serializers.FloatField()
+    expensive = serializers.BooleanField()
+
+    class Meta:
+        model = Book
+        fields = "__all__"
+
+
+class StoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Store
+        fields = "__all__"
+
 
 class CustomAggregationSerializer(BaseSerializer):
     def to_representation(self, instance):

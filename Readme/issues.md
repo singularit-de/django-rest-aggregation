@@ -25,10 +25,10 @@ Review of v0.4.0 (commit `20df1d3`), 2026-10-15.
 | [BUG-11](#bug-11-translated-aggregation-names) | low | Translated aggregation names | from code |
 | [BUG-12](#bug-12-annotation-type-lookup-can-raise) | low | Annotation type lookup can raise | from code |
 | [BUG-13](#bug-13-serializer-re-parses-group_by) | low | Serializer re-parses `group_by` | from code |
-| [BUG-14](#bug-14-two-tests-fail-on-exact-float-comparison) | low | Two tests fail | verified |
+| [BUG-14](#bug-14-two-tests-fail-on-exact-float-comparison) | low | Two tests fail | **fixed** |
 | [PKG-1](#pkg-1-runtime-dependencies-are-not-declared) | high | Dependencies not declared | **fixed** |
 | [PKG-2](#pkg-2-supported-versions-are-out-of-date) | high | Django 4.2 / Python 3.8 are EOL | **fixed** |
-| [PKG-3](#pkg-3-tests-import-from-src) | low | Tests import `src.` | from code |
+| [PKG-3](#pkg-3-tests-import-from-src) | low | Tests import `src.` | **fixed** |
 | [PKG-4](#pkg-4-no-ci-for-tests) | medium | No test CI | partly fixed |
 | [PKG-5](#pkg-5-packaging-metadata-and-tooling) | low | Metadata and tooling | – |
 | [PKG-6](#pkg-6-readme-links-on-pypi) | low | Relative README links on PyPI | – |
@@ -186,7 +186,7 @@ separately from `get_filtered_params()`. Both have to stay in sync. Also:
 `test_sum` and `test_avg` compare `76.96000000000001` with `76.96` (verified on Django 4.2.30, 5.2 and 6.1.2,
 SQLite 3.46).
 
-**Fix:** `assertAlmostEqual` or round in the test.
+**Fixed:** `assertRows()` in the tests compares floats and decimals rounded to 6 places.
 
 ---
 
@@ -205,10 +205,10 @@ Verified locally with the lowest versions on Python 3.10, Django 5.2.18 and the 
 
 ## PKG-3 Tests import from `src.`
 
-`tests/views.py` imports `src.django_rest_aggregation.mixins`, so tests run against the source tree
-instead of the installed package and only work from the repo root.
+`tests/views.py` (now `tests/testapp/views.py`) imported `src.django_rest_aggregation.mixins`, so tests ran
+against the source tree instead of the installed package and only worked from the repo root.
 
-**Fix:** install in editable mode and import `django_rest_aggregation`.
+**Fixed:** `uv sync` installs the package in editable mode and the tests import `django_rest_aggregation`.
 
 ## PKG-4 No CI for tests
 
@@ -222,7 +222,8 @@ publish only after it passes, trigger on `release: published`.
 
 - `pyproject.toml`: leftover `#Todo`, no `license`, no `__version__`.
 - `__init__.py` is empty; users import from `django_rest_aggregation.mixins`.
-- `runtests.py` contains commented-out coverage code; the SQLite DB is written to the repo root.
+- ~~`runtests.py` contains commented-out coverage code; the SQLite DB is written to the repo root.~~
+  Fixed: coverage is configured in `pyproject.toml`, tests use an in-memory SQLite DB.
 
 ## PKG-6 README links on PyPI
 

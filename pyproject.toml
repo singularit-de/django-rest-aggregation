@@ -45,3 +45,11 @@ dev = [
 ]
 postgres = ["psycopg2-binary>=2.9.10"]
 mssql = ["mssql-django>=2.0"]
+
+[tool.coverage.run]
+source = ["django_rest_aggregation"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

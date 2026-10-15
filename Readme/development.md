@@ -15,21 +15,49 @@ Dependencies live in `pyproject.toml` (`[project.dependencies]` and `[dependency
 ## Tests
 
 ```bash
-uv run runtests.py
+uv run runtests.py                                   # whole suite
+uv run runtests.py tests.test_validation --failfast   # one module, class or test
+uv run runtests.py --shuffle                         # any `manage.py test` option works
+uv run coverage run runtests.py && uv run coverage report
 ```
 
-- Uses Django's test runner with `tests.settings`; there is no pytest.
-- Default database is SQLite (`db.sqlite3` in the repo root). `tests/settings.py` also has
-  PostgreSQL, MySQL, MariaDB and MSSQL configs; switch `DATABASES["default"]` to use one.
-- The test app (`tests/`) has models `Agent`, `Author`, `Book`, `Store` and four ViewSets
-  that cover the features; `tests/test_aggregation.py` holds all 25 tests.
-- `tests/views.py` imports `src.django_rest_aggregation`, so run tests from the repo root.
+- `runtests.py` runs `manage.py test` with `tests.settings`; there is no pytest.
+- Tests import the installed package `django_rest_aggregation` (editable install from `uv sync`).
+- Database: in-memory SQLite by default. Set `DB_BACKEND` to `postgres`, `mysql`, `mariadb` or `mssql`
+  to use another backend; `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST` and `DB_PORT` override the
+  connection defaults in `tests/settings.py`:
 
-State on 2026-10-15 (SQLite 3.46): 23 of 25 tests pass with the lowest supported versions
-(Python 3.10, Django 5.2, DRF 3.16.0, django-filter 25.1), with Django 5.2.18 on Python 3.12 and with the
-latest versions (Python 3.14, Django 6.1.2, DRF 3.18.3, django-filter 26.2). `test_sum` and `test_avg` fail on
-exact float comparisons
-([BUG-14](issues.md#bug-14-two-tests-fail-on-exact-float-comparison)).
+  ```bash
+  DB_BACKEND=postgres uv run --group postgres runtests.py
+  ```
+
+Layout:
+
+| Path | Contents |
+|------|----------|
+| `tests/settings.py` | Test project settings, database selection |
+| `tests/testapp/` | Test app: models `Agent`, `Author`, `Book`, `Store`, four ViewSets that cover the features, their urls, serializers, filters and pagination |
+| `tests/base.py` | `AggregationTestCase` with the request and assertion helpers, `create_book()`, `BookStoreTestCase` (fixture shared by filtering and ordering tests) |
+| `tests/test_aggregations.py` | Aggregation functions and aliases, query count |
+| `tests/test_grouping.py` | `group_by` on fields, relations and annotations |
+| `tests/test_validation.py` | Error responses for invalid parameters |
+| `tests/test_filtering.py` | View filters before and value filters after aggregation |
+| `tests/test_ordering.py` | `ordering` on the aggregated result |
+| `tests/test_customization.py` | Custom name, serializer, pagination |
+
+Conventions:
+
+- Fixtures are created once per class in `setUpTestData`.
+- URLs come from the router: `reverse("book-aggregation")`; the helper `aggregate("book", **params)` wraps it.
+- `get_rows()` asserts status 200 and unwraps paginated results, `get_error()` asserts 400 and returns
+  the error message, `assertRows()` compares rows. Floats and decimals are compared rounded to 6 places,
+  since databases differ in the last digits. Results without a total `ordering` use `ordered=False`, since
+  row order is not defined there.
+- Variations of one behaviour are a case table with `subTest`.
+- One test per behaviour; behaviour changes need a new or adjusted test.
+
+State on 2026-10-15: all 30 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
+(SQLite 3.46), also with `--shuffle`, `--reverse` and `-W error::DeprecationWarning`.
 
 ## Lint
 
