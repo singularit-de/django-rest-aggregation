@@ -6,9 +6,15 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from django_rest_aggregation.mixins import AggregationMixin
 
 from .filters import AuthorFilter, BookFilter, Test123Filter
-from .models import Author, Book, Store
+from .models import Author, Book, Publisher, Store
 from .pagination import StandardResultsSetPagination
-from .serializers import AuthorSerializer, BookSerializer, CustomAggregationSerializer, StoreSerializer
+from .serializers import (
+    AuthorSerializer,
+    BookSerializer,
+    CustomAggregationSerializer,
+    PublisherSerializer,
+    StoreSerializer,
+)
 
 
 class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
@@ -74,3 +80,12 @@ class AuthorViewSet(viewsets.ModelViewSet, AggregationMixin):
     aggregated_filterset_class = Test123Filter
     aggregation_name = "test123"
     ordering_fields = "__all__"
+
+
+class PublisherViewSet(viewsets.ModelViewSet, AggregationMixin):
+    queryset = Publisher.objects.all()
+    serializer_class = PublisherSerializer
+
+    def get_queryset(self):
+        # "mixed" has no resolvable output_field (CharField + BigIntegerField).
+        return super().get_queryset().annotate(mixed=F("name") + F("revenue"))

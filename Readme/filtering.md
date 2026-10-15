@@ -57,7 +57,5 @@ Known limits:
 
 - Value filters are always `NumberFilter`, so `max`/`min` on a date field cannot be filtered
   by date ([BUG-6](issues.md#bug-6-value-filters-are-always-numberfilter)).
-- `aggregated_filterset_fields` changes a class shared by all views
-  ([BUG-2](issues.md#bug-2-valuefilter-is-shared-mutable-state)).
 
 Related: [View attributes](view-attributes.md) · [Ordering](ordering.md)

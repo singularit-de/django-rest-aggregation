@@ -27,7 +27,7 @@ class AggregationSerializer(serializers.Serializer):
         fields = self.context["request"].query_params.get("group_by")
         allowed = {self.context["name"]}
         if fields:
-            fields = fields.split(",")
+            fields = [field.strip() for field in fields.split(",")]
             allowed.update(fields)
         else:
             allowed.add("group")

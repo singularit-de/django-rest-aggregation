@@ -38,9 +38,10 @@ class AggregationMixin:
         return "value"
 
     def filter_aggregated_queryset(self, queryset):
-        if (fields := getattr(self, "aggregated_filterset_fields", None)) is not None:
-            ValueFilter.set_filter_fields(fields, self.get_aggregation_name())
-        filterset_class = getattr(self, "aggregated_filterset_class", ValueFilter)
+        filterset_class = getattr(self, "aggregated_filterset_class", None)
+        if filterset_class is None:
+            fields = getattr(self, "aggregated_filterset_fields", None) or []
+            filterset_class = ValueFilter.with_filter_fields(fields, self.get_aggregation_name())
         helper_view = HelperView(filterset_class)
         queryset = DjangoFilterBackend().filter_queryset(self.request, queryset, helper_view)
 
@@ -58,6 +59,8 @@ class AggregationMixin:
 
     def remove_invalid_ordering_fields(self, queryset, fields):
         ordering_fields = getattr(self, "aggregated_ordering_fields", None) or getattr(self, "ordering_fields", None)
+        if isinstance(ordering_fields, str) and ordering_fields != "__all__":
+            ordering_fields = [ordering_fields]
 
         if not ordering_fields or ("__all__" in ordering_fields) or (ordering_fields == "__all__"):
             return fields

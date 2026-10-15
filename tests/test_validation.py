@@ -97,3 +97,13 @@ class TestValidation(APITestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, [])
+
+    def test_aggregation_field_with_unresolvable_type(self):
+        # BUG-12: annotation without a resolvable output_field gives 400, not 500
+        response = self.client.get(
+            "/publisher/aggregation/",
+            {"aggregation": "sum", "aggregation_field": "mixed"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["error"], "'aggregation_field' must be a number field")

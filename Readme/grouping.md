@@ -8,8 +8,7 @@ and paths across relations (ForeignKey, reverse FK, ManyToMany) written with `__
 /store/aggregation/?aggregation=count&group_by=books__author__age
 ```
 
-Separate several fields with commas. Do not put spaces after the commas; they are not stripped
-([BUG-8](issues.md#bug-8-group_by-whitespace-is-not-stripped)):
+Separate several fields with commas; spaces around the names are ignored:
 
 ```
 /book/aggregation/?aggregation=count&group_by=author,pubdate

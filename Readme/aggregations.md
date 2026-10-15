@@ -3,13 +3,13 @@
 | `aggregation=` | Aliases | Needs `aggregation_field` | Allowed field types |
 |----------------|---------|---------------------------|---------------------|
 | `count` | – | no | – (counts rows) |
-| `sum` | – | yes | `IntegerField`, `FloatField`, `DecimalField` |
-| `average` | `avg` | yes | `IntegerField`, `FloatField`, `DecimalField` |
+| `sum` | – | yes | integer fields (`IntegerField`, `BigIntegerField`, `PositiveIntegerField`, …), `FloatField`, `DecimalField` |
+| `average` | `avg` | yes | integer fields, `FloatField`, `DecimalField` |
 | `minimum` | `min` | yes | numeric types above, `DateField`, `DateTimeField` |
 | `maximum` | `max` | yes | numeric types above, `DateField`, `DateTimeField` |
 
-The type check uses the field's `get_internal_type()` and matches the names exactly.
-Subtypes such as `BigIntegerField` or `PositiveIntegerField` are currently rejected
+The type check uses the field's `get_internal_type()`. All built-in integer fields are accepted (including the
+`Positive*` and `*AutoField` variants); `DurationField` and `TimeField` are currently rejected
 ([BUG-5](issues.md#bug-5-numeric-type-check-is-too-narrow)).
 
 `aggregation_field` can be:

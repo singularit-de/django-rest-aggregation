@@ -36,3 +36,16 @@ class Store(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Publisher(models.Model):
+    """Primary key not named ``id`` and integer field types other than ``IntegerField``."""
+
+    code = models.CharField(max_length=10, primary_key=True)
+    name = models.CharField(max_length=100)
+    revenue = models.BigIntegerField()
+    employees = models.PositiveIntegerField()
+    founded = models.SmallIntegerField()
+
+    def __str__(self):
+        return self.name

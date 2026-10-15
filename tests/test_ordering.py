@@ -1,3 +1,6 @@
+from django.test import SimpleTestCase
+
+from django_rest_aggregation.mixins import AggregationMixin
 from tests.base import FilteringAndOrderingTestCase
 
 
@@ -132,3 +135,11 @@ class TestOrdering(FilteringAndOrderingTestCase):
                 {"author__name": "Jane", "stores": self.store2.pk, "value": 1400},
             ],
         )
+
+
+class TestOrderingFieldsAsString(SimpleTestCase):
+    def test_string_ordering_fields_match_whole_names(self):
+        # BUG-10: ordering_fields = "name" must not allow "na"
+        view = AggregationMixin()
+        view.ordering_fields = "name"
+        self.assertEqual(view.remove_invalid_ordering_fields(None, ["na", "name", "-name"]), ["name", "-name"])

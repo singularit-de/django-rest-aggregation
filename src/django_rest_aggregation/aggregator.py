@@ -1,10 +1,25 @@
-from django.core.exceptions import FieldDoesNotExist
+from django.core.exceptions import FieldDoesNotExist, FieldError
 from django.db import models
 from django.db.models import Case, Value, When
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
 from .enums import Aggregation
+
+NUMBER_FIELD_TYPES = {
+    "FloatField",
+    "DecimalField",
+    "IntegerField",
+    "BigIntegerField",
+    "SmallIntegerField",
+    "PositiveIntegerField",
+    "PositiveBigIntegerField",
+    "PositiveSmallIntegerField",
+    "AutoField",
+    "BigAutoField",
+    "SmallAutoField",
+}
+DATE_FIELD_TYPES = {"DateField", "DateTimeField"}
 
 
 def get_filtered_params(request):
@@ -19,7 +34,7 @@ def get_filtered_params(request):
             raise ValidationError({"error": error_message})
 
     if params.get("group_by") is not None:
-        params["group_by"] = params["group_by"].split(",")
+        params["group_by"] = [field.strip() for field in params["group_by"].split(",")]
     return params
 
 
@@ -28,7 +43,7 @@ def get_annotation(params, name):
     aggregation_field = params.get("aggregation_field")
 
     if aggregation in Aggregation.COUNT.value:
-        return {name: models.Count("id")}
+        return {name: models.Count("pk")}
 
     if aggregation in Aggregation.SUM.value:
         return {name: models.Sum(aggregation_field)}
@@ -64,7 +79,11 @@ def field_exists(field_name, model, queryset):
 
 def get_field_type(field_name, model, queryset):
     if annotation_field_exists(field_name, queryset):
-        return queryset.query.annotations.get(field_name).output_field.get_internal_type()
+        try:
+            return queryset.query.annotations.get(field_name).output_field.get_internal_type()
+        except FieldError:
+            # e.g. mixed types without an explicit output_field; rejected by the type check
+            return None
     elif model_field_exists(field_name, model):
         fields = field_name.split("__")
         field = model._meta.get_field(fields[0])
@@ -108,20 +127,13 @@ class Aggregator:
 
             # check if aggregation_field is correct type
             if aggregation in Aggregation.get_number_field_required_aggregations():
-                if get_field_type(aggregation_field, self.model, self.queryset) not in [
-                    "FloatField",
-                    "IntegerField",
-                    "DecimalField",
-                ]:
+                if get_field_type(aggregation_field, self.model, self.queryset) not in NUMBER_FIELD_TYPES:
                     raise ValidationError({"error": "'aggregation_field' must be a number field"})
             else:
-                if get_field_type(aggregation_field, self.model, self.queryset) not in [
-                    "FloatField",
-                    "IntegerField",
-                    "DecimalField",
-                    "DateField",
-                    "DateTimeField",
-                ]:
+                if (
+                    get_field_type(aggregation_field, self.model, self.queryset)
+                    not in NUMBER_FIELD_TYPES | DATE_FIELD_TYPES
+                ):
                     raise ValidationError({"error": "'aggregation_field' must be a number or a date field"})
 
         # check if group_by is valid
