@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Collection
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
@@ -11,7 +13,6 @@ from rest_framework.request import Request
 from .enums import Aggregation
 
 if TYPE_CHECKING:
-    # Not imported at runtime: it needs django.contrib.contenttypes in INSTALLED_APPS.
     from django.contrib.contenttypes.fields import GenericForeignKey
 
 NUMBER_FIELD_TYPES = {
@@ -86,7 +87,7 @@ def get_annotation(params: AggregationParams, name: str) -> dict[str, models.Agg
 
 def get_model_field(
     field_name: str, model: type[models.Model]
-) -> "models.Field[Any, Any] | ForeignObjectRel | GenericForeignKey":
+) -> models.Field[Any, Any] | ForeignObjectRel | GenericForeignKey:
     """Resolve a ``__``-separated field path; raises ``FieldDoesNotExist`` if a part is missing."""
     fields = field_name.split("__")
     field = model._meta.get_field(fields[0])

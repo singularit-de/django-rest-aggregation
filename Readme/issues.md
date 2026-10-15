@@ -78,7 +78,7 @@ accepted values `str | Promise` instead of `str`.
 `AggregationSerializer.__init__` reads `group_by` from the request again, separately from
 `get_filtered_params()`; both strip the names and have to stay in sync. Also:
 `get_aggregation_serializer_class()` returns an instance, not a class; `PassTroughField` is a typo
-(`PassThroughField`); the docstring names a person.
+(`PassThroughField`).
 
 **Fix:** pass the validated `group_by` in the serializer context; rename with deprecation aliases
 (these names are public API).
@@ -94,7 +94,9 @@ accepted values `str | Promise` instead of `str`.
   `filterset_class(request.query_params, queryset=qs, request=request).qs`.
 - Document that the action inherits the view's permissions and `get_queryset()` scoping.
 - An OpenAPI schema for the action (drf-spectacular `extend_schema`).
-- Short `CHANGELOG.md`; commit messages are the only history at the moment. Useful before the 0.5 release,
-  which restricts fields and ordering.
+- Short `CHANGELOG.md`; commit messages are the only history at the moment. Needed before the 0.5 release,
+  whose breaking changes are: `group_by` / `aggregation_field` limited to `aggregation_fields` (serializer
+  fields by default), at most 3 `group_by` fields, `ordering` limited to result columns, and the removed hooks
+  `remove_invalid_ordering_fields()` and `ValueFilter.set_filter_fields()`.
 
 Related: [Architecture](architecture.md) · [Development](development.md)

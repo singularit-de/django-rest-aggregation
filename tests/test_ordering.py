@@ -1,7 +1,11 @@
+from django.db.models import Count
 from django.test import SimpleTestCase
+from rest_framework.request import Request
+from rest_framework.test import APIRequestFactory
 
 from django_rest_aggregation.mixins import AggregationMixin
 from tests.base import FilteringAndOrderingTestCase
+from tests.testapp.models import Book
 
 
 class TestOrdering(FilteringAndOrderingTestCase):
@@ -143,4 +147,14 @@ class TestOrderingFieldsAsString(SimpleTestCase):
         # ordering_fields = "name" must not allow "na"
         view = AggregationMixin()
         view.ordering_fields = "name"
-        self.assertEqual(view.remove_invalid_ordering_fields(None, ["na", "name", "-name"]), ["name", "-name"])
+        view.request = Request(APIRequestFactory().get("/", {"ordering": "na,name,-name"}))
+        queryset = Book.objects.values("name").annotate(value=Count("pk"))
+        self.assertEqual(view.order_aggregated_queryset(queryset).query.order_by, ("name", "-name"))
+
+    def test_list_ordering_fields_narrow_the_result_columns(self):
+        # aggregated_ordering_fields can only remove result columns, never add other fields
+        view = AggregationMixin()
+        view.aggregated_ordering_fields = ["value", "pages"]
+        view.request = Request(APIRequestFactory().get("/", {"ordering": "name,-value,pages"}))
+        queryset = Book.objects.values("name").annotate(value=Count("pk"))
+        self.assertEqual(view.order_aggregated_queryset(queryset).query.order_by, ("-value",))

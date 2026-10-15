@@ -24,7 +24,9 @@ Both can be combined:
 ## Setting up value filters
 
 Shortcut: list the lookups in `aggregated_filterset_fields`.
-Allowed entries are `"lt"`, `"lte"`, `"gt"`, `"gte"`, `"exact"`, or the string `"__all__"` for all of them.
+Allowed entries are `"lt"`, `"lte"`, `"gt"`, `"gte"`, `"exact"`, or the string `"__all__"` for all of them;
+other entries are ignored. Each view gets its own FilterSet class built from this list
+(`ValueFilter.with_filter_fields()`), so views do not share value filters.
 
 ```python
 class BookViewSet(AggregationMixin, GenericViewSet):
@@ -33,7 +35,7 @@ class BookViewSet(AggregationMixin, GenericViewSet):
     aggregated_filterset_fields = ["lt", "lte", "gt"]
 ```
 
-This creates `value__lt`, `value__lte`, `value__gt` (and `value` for `exact`).
+This creates `value__lt`, `value__lte` and `value__gt`; `"exact"` would add `value` (no suffix).
 
 Full control: set your own FilterSet in `aggregated_filterset_class`. Its `field_name`
 must be the aggregation name (`value` unless [`aggregation_name`](customization.md) is set):

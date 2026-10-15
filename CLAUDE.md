@@ -45,8 +45,11 @@ All code in `src/` is fully typed, and every new or changed function there must 
 - `uv run ty check` must pass with no diagnostics; do not silence errors with `# type: ignore` / `# ty: ignore`
   unless a third-party gap makes it unavoidable, and then say why in a comment.
 - Python 3.10 syntax only (`X | None`, `list[str]`; no `typing.Self`, no PEP 695 generics).
+- Every module in `src/` starts with `from __future__ import annotations` (ruff `I002` adds it), so annotations
+  are never evaluated at runtime and are written without quotes.
 - Imports needed only for annotations go under `if TYPE_CHECKING:` when importing them at runtime has side effects
-  or requirements (e.g. `django.contrib.contenttypes`, which needs the app installed).
+  or requirements (e.g. `django.contrib.contenttypes`, which needs the app installed). Runtime expressions such as
+  `cast(...)` arguments and type aliases are still evaluated, so they cannot use those names.
 - Use the existing types instead of re-describing them: `AggregationParams` (parsed query parameters),
   `FilterFields` (`aggregated_filterset_fields`). The mixin is typed against `GenericAPIView` via `_MixinBase`;
   new view attributes it reads get an annotation-only declaration on `AggregationMixin`.
@@ -56,7 +59,8 @@ All code in `src/` is fully typed, and every new or changed function there must 
 
 - `mixins.py`: `AggregationMixin.aggregation()` runs view filters → `Aggregator` → value filters → ordering
   → pagination → serializer.
-- `aggregator.py`: parameter parsing, validation, `.values(*group_by).annotate(name=Agg)`.
+- `aggregator.py`: parameter parsing, validation (field allowlist, `group_by` limit, field types),
+  `.order_by().values(*group_by).annotate(name=Agg)`.
 - `filter.py`: `ValueFilter` for filters on the aggregated value; the mixin uses a fresh subclass per request
   (`with_filter_fields()`), never mutate `ValueFilter` itself.
 - `enums.py`: aggregation names and aliases.

@@ -55,7 +55,7 @@ Known weak spots, to be reworked later:
 
 - Fixtures are created per test in `setUp` and URLs are hard-coded (`/book/aggregation/`).
 
-State on 2026-10-15: all 37 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
+State on 2026-10-15: all 38 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
 (SQLite 3.46), also with `--shuffle`, `--reverse` and `-W error::DeprecationWarning`. CI runs the other
 combinations.
 
