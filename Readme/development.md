@@ -3,16 +3,18 @@
 ## Setup
 
 ```bash
-uv venv
-uv pip install -r requirements-dev.txt   # includes mssql-django, which needs ODBC headers
-# or only what the tests need:
-uv pip install -r requirements.txt
+uv sync                      # package (editable) + runtime deps + dev group (coverage, ruff)
+uv sync --group postgres     # adds psycopg2-binary
+uv sync --group mssql        # adds mssql-django, which needs system ODBC packages
 ```
+
+Dependencies live in `pyproject.toml` (`[project.dependencies]` and `[dependency-groups]`);
+`uv.lock` is committed. Update it with `uv lock --upgrade`.
 
 ## Tests
 
 ```bash
-python runtests.py
+uv run runtests.py
 ```
 
 - Uses Django's test runner with `tests.settings`; there is no pytest.
@@ -29,7 +31,7 @@ Django 4.2.30 / DRF 3.17.2 / django-filter 23.5 and with Django 5.2.18 / DRF 3.1
 ## Lint
 
 ```bash
-ruff check . && ruff format --check .
+uv run ruff check . && uv run ruff format --check .
 ```
 
 Config: `ruff.toml` (line length 120).
@@ -37,7 +39,8 @@ Config: `ruff.toml` (line length 120).
 ## Release
 
 1. Bump `version` in `pyproject.toml`.
-2. Create a GitHub release. `.github/workflows/publish.yml` builds and uploads to PyPI with
+2. Run `uv lock` so the lock file picks up the new version.
+3. Create a GitHub release. `.github/workflows/publish.yml` builds with `uv build` and uploads to PyPI with
    trusted publishing (environment `pypi`).
 
 No workflow runs the tests ([PKG-4](issues.md#pkg-4-no-ci-for-tests)).

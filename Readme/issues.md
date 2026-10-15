@@ -26,7 +26,7 @@ Review of v0.4.0 (commit `20df1d3`), 2026-10-15.
 | [BUG-12](#bug-12-annotation-type-lookup-can-raise) | low | Annotation type lookup can raise | from code |
 | [BUG-13](#bug-13-serializer-re-parses-group_by) | low | Serializer re-parses `group_by` | from code |
 | [BUG-14](#bug-14-two-tests-fail-on-exact-float-comparison) | low | Two tests fail | verified |
-| [PKG-1](#pkg-1-runtime-dependencies-are-not-declared) | high | Dependencies not declared | verified |
+| [PKG-1](#pkg-1-runtime-dependencies-are-not-declared) | high | Dependencies not declared | **fixed** |
 | [PKG-2](#pkg-2-supported-versions-are-out-of-date) | high | Django 4.2 / Python 3.8 are EOL | – |
 | [PKG-3](#pkg-3-tests-import-from-src) | low | Tests import `src.` | from code |
 | [PKG-4](#pkg-4-no-ci-for-tests) | medium | No test CI | – |
@@ -192,16 +192,14 @@ SQLite 3.46).
 
 ## PKG-1 Runtime dependencies are not declared
 
-`pyproject.toml` has no `dependencies`; `uv.lock` confirms the package has none.
-`pip install django-rest-aggregation` does not install Django, DRF or django-filter.
-
-**Fix:** declare `dependencies = ["Django>=4.2", "djangorestframework>=3.14", "django-filter>=23.5"]`
-(lower bounds, no `~=` pins in a library).
+**Fixed:** `pyproject.toml` declares `Django>=4.2`, `djangorestframework>=3.14` and `django-filter>=23.5`
+(lower bounds, no `~=` pins in a library). The `requirements*.txt` files were replaced by uv dependency
+groups and a committed `uv.lock`.
 
 ## PKG-2 Supported versions are out of date
 
-`requirements.txt` pins `django~=4.2.6`; Django 4.2 LTS ended in April 2026. `requires-python = ">=3.8"`
-includes Python 3.8 and 3.9, both end of life. DRF `~=3.12` is from 2020.
+`pyproject.toml` still allows Django 4.2, whose LTS ended in April 2026. `requires-python = ">=3.8"`
+includes Python 3.8 and 3.9, both end of life. DRF 3.14 is from 2022.
 
 **Fix:** support Django 5.2 LTS (tests pass except BUG-14) and 6.x, Python ≥ 3.10, DRF ≥ 3.15.
 Add a test matrix (PKG-4).
@@ -216,7 +214,6 @@ instead of the installed package and only work from the repo root.
 ## PKG-4 No CI for tests
 
 Only `publish.yml` exists, triggered on `release: created`, without running tests first.
-`actions/setup-python@v4` is outdated.
 
 **Fix:** a test workflow (matrix of Python × Django, SQLite plus PostgreSQL service), ruff check;
 publish only after it passes, trigger on `release: published`.
@@ -225,10 +222,8 @@ publish only after it passes, trigger on `release: published`.
 
 - `pyproject.toml`: leftover `#Todo`, no `license`, no `Framework :: Django` classifiers, no `__version__`.
 - `__init__.py` is empty; users import from `django_rest_aggregation.mixins`.
-- `uv.lock` is untracked while `requirements*.txt` are used. Pick one (uv with dev dependency groups).
 - `ruff.toml` comment says 79 but sets 120; `ruff==0.3.7` is old.
 - `runtests.py` contains commented-out coverage code; the SQLite DB is written to the repo root.
-- `requirements-dev.txt` includes `mssql-django`, which needs system ODBC packages.
 
 ## PKG-6 README links on PyPI
 

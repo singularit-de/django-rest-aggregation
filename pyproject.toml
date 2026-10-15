@@ -11,6 +11,11 @@ authors = [
 description = "A DRF mixin for aggregation endpoints"
 readme = "README.md"
 requires-python = ">=3.8"
+dependencies = [
+    "Django>=4.2",
+    "djangorestframework>=3.14",
+    "django-filter>=23.5",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -20,3 +25,11 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/singularit-de/django-rest-aggregation/"
 "Bug Tracker" = "https://github.com/singularit-de/django-rest-aggregation/issues"
+
+[dependency-groups]
+dev = [
+    "coverage>=7.3.2",
+    "ruff==0.3.7",
+]
+postgres = ["psycopg2-binary"]
+mssql = ["mssql-django>=1.5"]

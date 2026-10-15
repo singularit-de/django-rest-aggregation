@@ -17,14 +17,16 @@ about 300 lines in `src/django_rest_aggregation/`.
 ## Commands
 
 ```bash
-python runtests.py              # Django test runner, settings: tests.settings, SQLite by default
-ruff check . && ruff format .   # line length 120 (ruff.toml)
+uv sync                                 # creates .venv: package, runtime deps, dev group
+uv run runtests.py                      # Django test runner, settings: tests.settings, SQLite by default
+uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml)
 ```
 
-- The `.venv` in the repo is empty. Create one with `uv venv && uv pip install -r requirements.txt`.
+- uv only, no pip / `requirements*.txt`. Dependencies are in `pyproject.toml` (`dependencies`, `[dependency-groups]`
+  `dev`, `postgres`, `mssql`); `uv.lock` is committed.
 - Run tests from the repo root: `tests/views.py` imports `src.django_rest_aggregation` (PKG-3).
 - `test_sum` and `test_avg` currently fail on exact float comparison (BUG-14); everything else passes on
-  Django 4.2 and 5.2.
+  Django 4.2, 5.2 and 6.1.
 - `runtests.py` writes `db.sqlite3` into the repo root; it is gitignored.
 
 ## Code map
@@ -47,8 +49,8 @@ ruff check . && ruff format .   # line length 120 (ruff.toml)
   `aggregated_filterset_class`, `aggregated_filterset_fields`, `aggregated_ordering_fields`, the overridable
   methods on the mixin, and the query parameters `aggregation`, `aggregation_field`, `group_by`, `ordering`,
   `<name>__<lookup>`. Renames need deprecation aliases.
-- `pyproject.toml` declares no runtime dependencies (PKG-1); `requirements.txt` pins Django 4.2, which is EOL
-  (PKG-2). Maintenance priority: PKG-1, PKG-2, PKG-4, then SEC-1, BUG-1, BUG-2.
+- Runtime dependencies are lower bounds only (library, no `~=` pins). Python ≥ 3.8 and Django 4.2 are still
+  allowed, both EOL (PKG-2). Maintenance priority: PKG-2, PKG-4, then SEC-1, BUG-1, BUG-2.
 - Behaviour changes need a test in `tests/test_aggregation.py` (test app models: `Agent`, `Author`, `Book`,
   `Store`; ViewSets in `tests/views.py`).
 - Release: bump `version` in `pyproject.toml`, create a GitHub release → `publish.yml` uploads to PyPI.

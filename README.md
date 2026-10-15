@@ -4,7 +4,7 @@ A Django REST Framework mixin that adds an aggregation endpoint (count, sum, ave
 with grouping, filtering and ordering to your ViewSets.
 
 ```bash
-pip install django-rest-aggregation
+uv add django-rest-aggregation
 ```
 
 ```python
@@ -25,7 +25,7 @@ The documentation is split into small linked notes in [`Readme/`](Readme/).
 
 **Using the package**
 
-- [Installation](Readme/installation.md): pip, required packages, `INSTALLED_APPS`
+- [Installation](Readme/installation.md): install, dependencies, `INSTALLED_APPS`
 - [Quickstart](Readme/quickstart.md): add the mixin, register the route, example requests and responses
 - [Query parameters](Readme/query-parameters.md): all URL parameters at a glance
 - [Aggregations](Readme/aggregations.md): aggregation types, aliases, allowed field types
