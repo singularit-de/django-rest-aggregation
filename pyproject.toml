@@ -10,14 +10,24 @@ authors = [
 ]
 description = "A DRF mixin for aggregation endpoints"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
-    "Django>=4.2",
-    "djangorestframework>=3.14",
-    "django-filter>=23.5",
+    "Django>=5.2",
+    "djangorestframework>=3.16",
+    "django-filter>=25.1",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Framework :: Django",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Framework :: Django :: 6.1",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
@@ -28,8 +38,9 @@ classifiers = [
 
 [dependency-groups]
 dev = [
-    "coverage>=7.3.2",
-    "ruff==0.3.7",
+    "coverage>=7.16",
+    "pre-commit>=4.6.2",
+    "ruff>=0.17",
 ]
-postgres = ["psycopg2-binary"]
-mssql = ["mssql-django>=1.5"]
+postgres = ["psycopg2-binary>=2.9.10"]
+mssql = ["mssql-django>=2.0"]

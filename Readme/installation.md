@@ -4,8 +4,8 @@
 uv add django-rest-aggregation
 ```
 
-This also installs the runtime dependencies: Django ≥ 4.2, Django REST Framework ≥ 3.14 and
-django-filter ≥ 23.5.
+This also installs the runtime dependencies: Django ≥ 5.2, Django REST Framework ≥ 3.16 and
+django-filter ≥ 25.1. Python ≥ 3.10 is required.
 
 Add `django_filters` to `INSTALLED_APPS`, because aggregated value filtering uses it:
 
