@@ -9,7 +9,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
-from .aggregator import Aggregator
+from .aggregator import DEFAULT_MAX_GROUP_BY, Aggregator, AllowedFields
 from .filter import FilterFields, ValueFilter
 from .serializers import AggregationSerializer
 
@@ -29,12 +29,20 @@ class AggregationMixin(_MixinBase):
     aggregated_filterset_class: type[FilterSet]
     aggregated_filterset_fields: FilterFields
     aggregated_ordering_fields: Sequence[str] | Literal["__all__"]
+    aggregation_fields: AllowedFields
+    aggregation_max_group_by: int | None
 
     @action(methods=["get"], detail=False, url_path="aggregation", url_name="aggregation")
     def aggregation(self, request: Request) -> Response:
         queryset = self.filter_queryset(self.get_queryset())
 
-        aggregator = Aggregator(request, queryset, self.get_aggregation_name())
+        aggregator = Aggregator(
+            request,
+            queryset,
+            self.get_aggregation_name(),
+            allowed_fields=self.get_aggregation_fields(),
+            max_group_by=self.get_aggregation_max_group_by(),
+        )
         queryset = aggregator.get_aggregated_queryset()
         queryset = self.filter_aggregated_queryset(queryset)
         queryset = self.order_aggregated_queryset(queryset)
@@ -59,6 +67,26 @@ class AggregationMixin(_MixinBase):
             return name
         return "value"
 
+    def get_aggregation_fields(self) -> AllowedFields:
+        """Fields allowed in group_by and aggregation_field.
+
+        Defaults to the fields the view's serializer exposes for reading, so aggregation reveals nothing the
+        normal API does not. ``aggregation_fields = "__all__"`` allows every model field and annotation.
+        """
+        fields = getattr(self, "aggregation_fields", None)
+        if fields is not None:
+            return fields
+        serializer_fields = getattr(self.get_serializer(), "fields", {})
+        return {
+            field.source.replace(".", "__")
+            for field in serializer_fields.values()
+            if not field.write_only and field.source and field.source != "*"
+        }
+
+    def get_aggregation_max_group_by(self) -> int | None:
+        """Maximum number of group_by fields; None means no limit."""
+        return getattr(self, "aggregation_max_group_by", DEFAULT_MAX_GROUP_BY)
+
     def filter_aggregated_queryset(self, queryset: QuerySet[Any, Any]) -> QuerySet[Any, Any]:
         filterset_class = getattr(self, "aggregated_filterset_class", None)
         if filterset_class is None:
@@ -73,6 +101,10 @@ class AggregationMixin(_MixinBase):
         params = self.request.query_params.get("ordering")
         if params:
             fields = [param.strip() for param in params.split(",")]
+            # Only the result columns (group_by fields and the value) can be ordered by: other fields would
+            # change the GROUP BY, leak hidden values through the order, or be unknown. Others are ignored.
+            columns = {*queryset.query.values_select, *queryset.query.annotation_select}
+            fields = [term for term in fields if term.removeprefix("-") in columns]
             ordering = self.remove_invalid_ordering_fields(queryset, fields)
             if ordering:
                 return queryset.order_by(*ordering)

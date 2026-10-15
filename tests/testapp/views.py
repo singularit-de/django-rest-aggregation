@@ -25,6 +25,20 @@ class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
     filterset_class = BookFilter
     ordering_fields = "__all__"
     aggregated_filterset_fields = ["gte", "lte", "gt", "lt", "exact"]
+    # Relations beyond the serializer are allowed explicitly; author__agent__* is not.
+    aggregation_fields = [
+        "name",
+        "pages",
+        "price",
+        "rating",
+        "pubdate",
+        "price_per_page",
+        "expensive",
+        "author",
+        "author__name",
+        "stores",
+        "stores__name",
+    ]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -69,6 +83,7 @@ class CustomizedBookViewSet(viewsets.ModelViewSet, AggregationMixin):
 class StoreViewSet(viewsets.ModelViewSet, AggregationMixin):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
+    aggregation_fields = ["name", "books__pages", "books__author__age"]
 
 
 class AuthorViewSet(viewsets.ModelViewSet, AggregationMixin):
@@ -80,11 +95,13 @@ class AuthorViewSet(viewsets.ModelViewSet, AggregationMixin):
     aggregated_filterset_class = Test123Filter
     aggregation_name = "test123"
     ordering_fields = "__all__"
+    aggregation_fields = ["name", "age", "books__pages"]
 
 
 class PublisherViewSet(viewsets.ModelViewSet, AggregationMixin):
     queryset = Publisher.objects.all()
     serializer_class = PublisherSerializer
+    aggregation_fields = "__all__"
 
     def get_queryset(self):
         # "mixed" has no resolvable output_field (CharField + BigIntegerField).

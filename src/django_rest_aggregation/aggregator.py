@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Any, TypedDict
+from collections.abc import Collection
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 from django.core.exceptions import FieldDoesNotExist, FieldError
 from django.db import models
@@ -27,6 +28,10 @@ NUMBER_FIELD_TYPES = {
     "SmallAutoField",
 }
 DATE_FIELD_TYPES = {"DateField", "DateTimeField"}
+
+# Field paths a client may use in group_by and aggregation_field; "__all__" allows every model field and annotation.
+AllowedFields = Collection[str] | Literal["__all__"]
+DEFAULT_MAX_GROUP_BY = 3
 
 
 class AggregationParams(TypedDict, total=False):
@@ -123,11 +128,28 @@ def get_field_type(field_name: str, model: type[models.Model], queryset: models.
 
 
 class Aggregator:
-    def __init__(self, request: Request, queryset: models.QuerySet[Any, Any], aggregation_name: str) -> None:
+    def __init__(
+        self,
+        request: Request,
+        queryset: models.QuerySet[Any, Any],
+        aggregation_name: str,
+        *,
+        allowed_fields: AllowedFields,
+        max_group_by: int | None = DEFAULT_MAX_GROUP_BY,
+    ) -> None:
+        """``allowed_fields`` has no default on purpose: callers decide which fields clients may use."""
         self.params = get_filtered_params(request)
         self.queryset = queryset
         self.model: type[models.Model] = queryset.model
         self.aggregation_name = aggregation_name
+        self.allowed_fields = allowed_fields
+        self.max_group_by = max_group_by
+
+    def field_allowed(self, field_name: str) -> bool:
+        """Field exists and the view allows it. Disallowed fields get the same error as unknown ones."""
+        if self.allowed_fields != "__all__" and field_name not in self.allowed_fields:
+            return False
+        return field_exists(field_name, self.model, self.queryset)
 
     def get_aggregated_queryset(self) -> models.QuerySet[Any, dict[str, Any]]:
         self.validate_params()
@@ -137,7 +159,8 @@ class Aggregator:
                 group=Case(When(pk__isnull=False, then=Value("all")), default=Value("test"))
             )
 
-        return self.queryset.values(*group_by).annotate(**get_annotation(self.params, self.aggregation_name))
+        # order_by(): an ordering from before the aggregation would be added to GROUP BY and break the groups.
+        return self.queryset.order_by().values(*group_by).annotate(**get_annotation(self.params, self.aggregation_name))
 
     def validate_params(self) -> None:
         # check if aggregation is in params and is valid
@@ -152,7 +175,7 @@ class Aggregator:
         if aggregation in Aggregation.get_field_required_aggregations():
             if (aggregation_field := self.params.get("aggregation_field", None)) is None:
                 raise ValidationError({"error": "'aggregation_field' is required"})
-            if not field_exists(aggregation_field, self.model, self.queryset):
+            if not self.field_allowed(aggregation_field):
                 raise ValidationError({"error": "'aggregation_field' is not valid"})
 
             # check if aggregation_field is correct type
@@ -167,6 +190,9 @@ class Aggregator:
                     raise ValidationError({"error": "'aggregation_field' must be a number or a date field"})
 
         # check if group_by is valid
-        for group_by in self.params.get("group_by", []):
-            if not field_exists(group_by, self.model, self.queryset):
+        group_by_fields = self.params.get("group_by", [])
+        if self.max_group_by is not None and len(group_by_fields) > self.max_group_by:
+            raise ValidationError({"error": f"'group_by' accepts at most {self.max_group_by} fields"})
+        for group_by in group_by_fields:
+            if not self.field_allowed(group_by):
                 raise ValidationError({"error": "'group_by' is not valid"})

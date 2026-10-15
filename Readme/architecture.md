@@ -15,15 +15,18 @@ Package: `src/django_rest_aggregation/` (about 300 lines).
 
 1. `self.filter_queryset(self.get_queryset())`: the view's normal filter backends
    (including `OrderingFilter`) run on the model queryset.
-2. `Aggregator(request, queryset, name)`: `get_filtered_params()` reads `aggregation`,
-   `aggregation_field` and `group_by` from the query string.
+2. `Aggregator(request, queryset, name, allowed_fields=…, max_group_by=…)` (`allowed_fields` is required, no
+   fail-open default): `get_filtered_params()` reads
+   `aggregation`, `aggregation_field` and `group_by` from the query string. The allowed fields come from
+   `get_aggregation_fields()` (serializer fields by default).
 3. `Aggregator.get_aggregated_queryset()`:
-   - `validate_params()` checks the aggregation, field existence and field type
+   - `validate_params()` checks the aggregation, field existence, allowlist, number of group fields and field type
    - without `group_by`, annotates a constant `group` column
-   - returns `queryset.values(*group_by).annotate(<name>=<Aggregate>)`
+   - returns `queryset.order_by().values(*group_by).annotate(<name>=<Aggregate>)`; `order_by()` removes an
+     ordering set before aggregation, which would otherwise end up in `GROUP BY`
 4. `filter_aggregated_queryset()`: runs `DjangoFilterBackend` with the value FilterSet,
    using `HelperView` as a fake view that only carries `filterset_class`.
-5. `order_aggregated_queryset()`: applies `ordering` after the allowlist check.
+5. `order_aggregated_queryset()`: applies `ordering` terms that are result columns and pass the allowlist.
 6. Pagination and serialization as in a normal list action.
 
 The whole result is a single SQL `SELECT … GROUP BY …` with an optional `HAVING`

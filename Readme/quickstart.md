@@ -12,6 +12,9 @@ class BookViewSet(AggregationMixin, GenericViewSet):
     serializer_class = BookSerializer
 ```
 
+`group_by` and `aggregation_field` accept the fields `BookSerializer` shows. For relation paths such as
+`author__name`, list them in `aggregation_fields`, see [Field access](field-access.md).
+
 Register it with a router. The endpoint is `{base_url}/aggregation/`:
 
 ```python
