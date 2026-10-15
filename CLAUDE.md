@@ -39,7 +39,8 @@ uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); als
 - `mixins.py`: `AggregationMixin.aggregation()` runs view filters → `Aggregator` → value filters → ordering
   → pagination → serializer.
 - `aggregator.py`: parameter parsing, validation, `.values(*group_by).annotate(name=Agg)`.
-- `filter.py`: `ValueFilter` for filters on the aggregated value. **It mutates class state** (BUG-2).
+- `filter.py`: `ValueFilter` for filters on the aggregated value; the mixin uses a fresh subclass per request
+  (`with_filter_fields()`), never mutate `ValueFilter` itself.
 - `enums.py`: aggregation names and aliases.
 - `serializers.py`: default output serializer, drops fields not in `group_by` / value.
 
@@ -56,9 +57,9 @@ uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); als
   `<name>__<lookup>`. Renames need deprecation aliases.
 - Runtime dependencies are lower bounds only (library, no `~=` pins): Python ≥ 3.10, Django ≥ 5.2, DRF ≥ 3.16,
   django-filter ≥ 25.1 (first releases supporting Django 5.2). Keep `classifiers` in sync when support changes.
-  Maintenance priority: SEC-1, BUG-1, BUG-2.
+  Maintenance priority: SEC-1, BUG-1 (with BUG-3, SEC-2).
 - Behaviour changes need a test in the matching `tests/test_<topic>.py` (test app models: `Agent`, `Author`,
-  `Book`, `Store`; ViewSets in `tests/testapp/views.py`).
+  `Book`, `Publisher`, `Store`; ViewSets in `tests/testapp/views.py`).
 - CI (`ci.yml`, every push) runs ruff and the tests (Python × Django matrix, PostgreSQL, SQL Server).
 - Release: bump `version` in `pyproject.toml`, publish a GitHub release → `publish.yml` runs `ci.yml` on the
   release tag and uploads to PyPI only if it passes. Saving a draft release does not trigger it.

@@ -13,17 +13,17 @@ Review of v0.4.0 (commit `20df1d3`), 2026-10-15.
 | [SEC-2](#sec-2-ordering-is-permissive-by-default) | medium | Ordering on any field by default | verified |
 | [SEC-3](#sec-3-no-limit-on-query-cost) | medium | No limit on query cost | from code |
 | [BUG-1](#bug-1-ordering-by-a-non-grouped-field-breaks-the-aggregation) | high | Ordering breaks `GROUP BY`, wrong results | verified |
-| [BUG-2](#bug-2-valuefilter-is-shared-mutable-state) | high | `ValueFilter` is shared mutable state | verified |
+| [BUG-2](#bug-2-valuefilter-is-shared-mutable-state) | high | `ValueFilter` is shared mutable state | **fixed** |
 | [BUG-3](#bug-3-unknown-ordering-field-returns-500) | medium | Unknown ordering field → 500 | verified |
-| [BUG-4](#bug-4-count-assumes-a-primary-key-named-id) | medium | `count` assumes pk named `id` | from code |
-| [BUG-5](#bug-5-numeric-type-check-is-too-narrow) | medium | Numeric type check too narrow | from code |
+| [BUG-4](#bug-4-count-assumes-a-primary-key-named-id) | medium | `count` assumes pk named `id` | **fixed** |
+| [BUG-5](#bug-5-numeric-type-check-is-too-narrow) | medium | Numeric type check too narrow | partly fixed |
 | [BUG-6](#bug-6-value-filters-are-always-numberfilter) | low | Value filters only numeric | verified |
 | [BUG-7](#bug-7-count-on-an-empty-queryset-returns-an-empty-list) | low | Empty queryset → `[]` | verified |
-| [BUG-8](#bug-8-group_by-whitespace-is-not-stripped) | low | `group_by` whitespace | verified |
+| [BUG-8](#bug-8-group_by-whitespace-is-not-stripped) | low | `group_by` whitespace | **fixed** |
 | [BUG-9](#bug-9-the-magic-group-annotation) | low | Magic `group` annotation | from code |
-| [BUG-10](#bug-10-string-ordering_fields-match-substrings) | low | String `ordering_fields` match substrings | from code |
+| [BUG-10](#bug-10-string-ordering_fields-match-substrings) | low | String `ordering_fields` match substrings | **fixed** |
 | [BUG-11](#bug-11-translated-aggregation-names) | low | Translated aggregation names | from code |
-| [BUG-12](#bug-12-annotation-type-lookup-can-raise) | low | Annotation type lookup can raise | from code |
+| [BUG-12](#bug-12-annotation-type-lookup-can-raise) | low | Annotation type lookup can raise | **fixed** |
 | [BUG-13](#bug-13-serializer-re-parses-group_by) | low | Serializer re-parses `group_by` | from code |
 | [BUG-14](#bug-14-two-tests-fail-on-exact-float-comparison) | low | Two tests fail | **fixed** |
 | [PKG-1](#pkg-1-runtime-dependencies-are-not-declared) | high | Dependencies not declared | **fixed** |
@@ -94,8 +94,9 @@ Verified: after one request to `customized_book`, `ValueFilter.base_filters` hol
 (`Store` has no `CustomizedValue` annotation). Behaviour depends on request order, and concurrent
 requests mutate the same dict.
 
-**Fix:** build a fresh subclass per view, e.g.
-`type("ValueFilter", (ValueFilter,), {name: filter, …})`, and cache it per view class.
+**Fixed:** the mixin builds a fresh subclass per request with `ValueFilter.with_filter_fields()` and no longer
+touches `ValueFilter` itself. `set_filter_fields()` still exists for compatibility but is not used by the package.
+Test: `test_value_filters_do_not_leak_between_views`.
 
 ## BUG-3 Unknown ordering field returns 500
 
@@ -109,7 +110,8 @@ Verified on `/book/aggregation/?aggregation=count&group_by=author&ordering=doesn
 `get_annotation()` uses `models.Count("id")` (`aggregator.py:31`). Models with a different primary key
 name (e.g. `uuid = UUIDField(primary_key=True)`) raise `FieldError`.
 
-**Fix:** `models.Count("pk")`, or `Count("*")` to count rows.
+**Fixed:** `models.Count("pk")`. Test: `test_count_with_primary_key_not_named_id` (`Publisher` has a
+`CharField` primary key).
 
 ## BUG-5 Numeric type check is too narrow
 
@@ -118,8 +120,9 @@ Rejected even though they work: `BigIntegerField`, `SmallIntegerField`, `Positiv
 `PositiveSmallIntegerField`, `PositiveBigIntegerField`, `AutoField`, `BigAutoField`, `DurationField`
 (sum/avg), and `TimeField` (min/max).
 
-**Fix:** check with `isinstance(field, (IntegerField, FloatField, DecimalField, DurationField))`
-instead of type names.
+**Partly fixed:** all integer types (`BigIntegerField`, `SmallIntegerField`, the `Positive*` and `*AutoField`
+variants) are accepted (`NUMBER_FIELD_TYPES` in `aggregator.py`). Test: `test_integer_field_variants`.
+Still open: `DurationField` for sum/avg and `TimeField` for min/max, which need their own tests.
 
 ## BUG-6 Value filters are always `NumberFilter`
 
@@ -139,13 +142,17 @@ Verified with `?aggregation=count&name__icontains=zzz`. Clients would expect `[{
 
 `group_by=author, name` → `400 'group_by' is not valid` (verified), while `ordering` strips spaces.
 
-**Fix:** `[f.strip() for f in group_by.split(",") if f.strip()]`.
+**Fixed:** each part is stripped, both in `get_filtered_params()` and in `AggregationSerializer`, which parses
+`group_by` again (BUG-13). Empty parts (`author,`) are still rejected with 400. Test: `test_group_by_with_whitespace`.
 
 ## BUG-9 The magic `group` annotation
 
 Without `group_by` the queryset gets
 `annotate(group=Case(When(pk__isnull=False, then=Value("all")), default=Value("test")))`
-(`aggregator.py:86-89`). The `Case` is unnecessary (`Value("all")` is enough) and `"test"` is leftover.
+(`aggregator.py`). `"test"` is leftover. The `Case` looks unnecessary but is not: it references `pk`, which keeps a
+`GROUP BY` in the query. With a plain `Value("all")` Django drops the `GROUP BY` (verified), so an empty
+queryset returns one row with `0` instead of `[]` (BUG-7) and value filters become a `HAVING` without
+`GROUP BY`. Replacing it is a behaviour change and belongs with BUG-7.
 On a model with a field named `group`, the annotation collides (`ValueError` → 500), and
 `group_by=group` is checked against the model and rejected.
 
@@ -156,7 +163,8 @@ On a model with a field named `group`, the annotation collides (`ValueError` →
 `term in ordering_fields` (`mixins.py:71`) does substring matching when `ordering_fields` is a string
 other than `"__all__"`, e.g. `"name"` allows `na`.
 
-**Fix:** normalize strings to a one-element list.
+**Fixed:** a string other than `"__all__"` is normalized to a one-element list.
+Test: `test_string_ordering_fields_match_whole_names`.
 
 ## BUG-11 Translated aggregation names
 
@@ -170,7 +178,8 @@ active language. An API parameter should not change with the locale, and the err
 `get_field_type()` reads `annotation.output_field` (`aggregator.py:67`). For expressions with mixed
 types and no explicit `output_field`, Django raises `FieldError` → 500 instead of a 400.
 
-**Fix:** catch `FieldError` and return a validation error.
+**Fixed:** `get_field_type()` catches `FieldError` and returns no type, so the request is rejected with
+`400 'aggregation_field' must be a number field`. Test: `test_aggregation_field_with_unresolvable_type`.
 
 ## BUG-13 Serializer re-parses `group_by`
 

@@ -36,7 +36,7 @@ Layout:
 | Path | Contents |
 |------|----------|
 | `tests/settings.py` | Test project settings, database selection |
-| `tests/testapp/` | Test app: models `Agent`, `Author`, `Book`, `Store`, four ViewSets that cover the features, their urls, serializers, filters and pagination |
+| `tests/testapp/` | Test app: models `Agent`, `Author`, `Book`, `Publisher`, `Store`, five ViewSets that cover the features, their urls, serializers, filters and pagination |
 | `tests/base.py` | `FilteringAndOrderingTestCase`: the `setUp` shared by the filtering and ordering tests |
 | `tests/test_aggregations.py` | Aggregation functions on number and date fields |
 | `tests/test_grouping.py` | `group_by` on fields, relations and annotations |
@@ -54,7 +54,7 @@ Known weak spots, to be reworked later:
 
 - Fixtures are created per test in `setUp` and URLs are hard-coded (`/book/aggregation/`).
 
-State on 2026-10-15: all 25 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
+State on 2026-10-15: all 31 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
 (SQLite 3.46), also with `--shuffle`, `--reverse` and `-W error::DeprecationWarning`. CI runs the other
 combinations.
 

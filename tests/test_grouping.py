@@ -101,6 +101,24 @@ class TestGroupingAndAnnotations(APITestCase):
             ),
         )
 
+    def test_group_by_with_whitespace(self):
+        # BUG-8
+        response = self.client.get(
+            "/book/aggregation/",
+            {"aggregation": "count", "group_by": "author__name, stores__name", "ordering": "author__name,stores__name"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data,
+            [
+                {"author__name": "Jane", "stores__name": "Store1", "value": 1},
+                {"author__name": "Jane", "stores__name": "Store2", "value": 1},
+                {"author__name": "John", "stores__name": "Store1", "value": 2},
+                {"author__name": "John", "stores__name": "Store2", "value": 1},
+            ],
+        )
+
     def test_group_by_related_field(self):
         # Group by foreign key related field
         response = self.client.get(

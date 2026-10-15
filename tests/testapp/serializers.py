@@ -3,7 +3,7 @@ import decimal
 from rest_framework import serializers
 from rest_framework.serializers import BaseSerializer
 
-from .models import Author, Book, Store
+from .models import Author, Book, Publisher, Store
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -18,6 +18,12 @@ class BookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
+        fields = "__all__"
+
+
+class PublisherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Publisher
         fields = "__all__"
 
 

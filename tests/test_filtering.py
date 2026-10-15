@@ -1,3 +1,4 @@
+from django_rest_aggregation.filter import ValueFilter
 from tests.base import FilteringAndOrderingTestCase
 
 
@@ -178,3 +179,21 @@ class TestFiltering(FilteringAndOrderingTestCase):
             response.data,
             [{"name": "Jane", "test123": 2600}, {"name": "John", "test123": 1000}],
         )
+
+    def test_value_filters_do_not_leak_between_views(self):
+        # BUG-2: value filters of one view must not show up in another view
+        response = self.client.get(
+            "/customized_book/aggregation/",
+            {"aggregation": "sum", "aggregation_field": "price", "CustomizedValue__gte": 0},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ValueFilter.base_filters, {})
+
+        response = self.client.get(
+            "/store/aggregation/",
+            {"aggregation": "count", "CustomizedValue__gt": 0},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{"group": "all", "value": 2}])

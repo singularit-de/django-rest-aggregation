@@ -22,6 +22,11 @@ def convert_to_filter_fields(fields, name):
 
 class ValueFilter(filters.FilterSet):
     @classmethod
+    def with_filter_fields(cls, fields, name):
+        """Return a subclass with the value filters, leaving this class unchanged."""
+        return type(cls.__name__, (cls,), dict(convert_to_filter_fields(fields, name)))
+
+    @classmethod
     def set_filter_fields(cls, fields, name):
         filtered_fields = convert_to_filter_fields(fields, name)
         for field in filtered_fields:
