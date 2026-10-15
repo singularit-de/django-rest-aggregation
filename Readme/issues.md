@@ -29,7 +29,7 @@ Review of v0.4.0 (commit `20df1d3`), 2026-10-15.
 | [PKG-1](#pkg-1-runtime-dependencies-are-not-declared) | high | Dependencies not declared | **fixed** |
 | [PKG-2](#pkg-2-supported-versions-are-out-of-date) | high | Django 4.2 / Python 3.8 are EOL | **fixed** |
 | [PKG-3](#pkg-3-tests-import-from-src) | low | Tests import `src.` | **fixed** |
-| [PKG-4](#pkg-4-no-ci-for-tests) | medium | No test CI | partly fixed |
+| [PKG-4](#pkg-4-no-ci-for-tests) | medium | No test CI | **fixed** |
 | [PKG-5](#pkg-5-packaging-metadata-and-tooling) | low | Metadata and tooling | – |
 | [PKG-6](#pkg-6-readme-links-on-pypi) | low | Relative README links on PyPI | – |
 | [OPT](#optimizations-and-ideas) | – | Optimizations and ideas | – |
@@ -201,7 +201,7 @@ groups and a committed `uv.lock`.
 **Fixed:** `requires-python = ">=3.10"`, `Django>=5.2`, `djangorestframework>=3.16`, `django-filter>=25.1`
 (the first DRF and django-filter releases that support Django 5.2), plus Python and Django classifiers.
 Verified locally with the lowest versions on Python 3.10, Django 5.2.18 and the latest versions on Python 3.14
-(only BUG-14 fails). The test matrix itself is still open (PKG-4).
+(only BUG-14 fails). The test matrix is in CI since PKG-4.
 
 ## PKG-3 Tests import from `src.`
 
@@ -215,9 +215,10 @@ against the source tree instead of the installed package and only worked from th
 `ci.yml` runs ruff on pushes to `main` and on pull requests, but no tests. `publish.yml` is triggered on
 `release: created` and does not wait for CI.
 
-**Partly fixed:** `ci.yml` has test jobs (Python × Django matrix on SQLite, lowest dependencies,
-PostgreSQL and SQL Server services, on every push). Still open: publish only after CI passes, trigger on
-`release: published`.
+**Fixed:** `ci.yml` has test jobs (Python × Django matrix on SQLite, lowest dependencies,
+PostgreSQL and SQL Server services) and runs on every push. `publish.yml` triggers on `release: published`,
+calls `ci.yml` as a reusable workflow and uploads only after it passes. Not yet run on GitHub at the time of
+writing.
 
 ## PKG-5 Packaging metadata and tooling
 

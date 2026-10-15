@@ -98,9 +98,12 @@ uv run --isolated --with "django<6" runtests.py                          # Djang
 
 1. Bump `version` in `pyproject.toml`.
 2. Run `uv lock` so the lock file picks up the new version.
-3. Create a GitHub release. `.github/workflows/publish.yml` builds with `uv build` and uploads to PyPI with
-   trusted publishing (environment `pypi`).
+3. Publish a GitHub release. `.github/workflows/publish.yml` first runs the whole `ci.yml` (lint and all test
+   jobs) on the release tag. Only if it passes does it build with `uv build` and upload to PyPI with trusted
+   publishing (environment `pypi`).
 
-`publish.yml` does not wait for CI ([PKG-4](issues.md#pkg-4-no-ci-for-tests)), so check that CI is green first.
+The workflow triggers on `release: published`, so saving a draft release does not upload anything. If CI
+fails, fix the problem, then delete and recreate the release and tag, since PyPI does not accept the same
+version twice and the failed run uploaded nothing.
 
 Related: [Architecture](architecture.md) · [Issues](issues.md)

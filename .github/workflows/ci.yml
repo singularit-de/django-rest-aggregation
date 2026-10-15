@@ -3,6 +3,8 @@ name: CI
 on:
   push:
   workflow_dispatch:
+  # publish.yml runs this workflow before uploading a release.
+  workflow_call:
 
 jobs:
   lint:
