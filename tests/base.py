@@ -1,81 +1,97 @@
-import datetime
-from decimal import Decimal
-
-from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from tests.testapp.models import Agent, Author, Book, Store
 
 
-def create_book(number, author, price, rating):
-    """Create ``Book<number>`` with ``number * 100`` pages, published on 2020-01-<number>."""
-    return Book.objects.create(
-        name=f"Book{number}",
-        pages=number * 100,
-        price=price,
-        rating=Decimal(rating),
-        author=author,
-        pubdate=datetime.date(2020, 1, number),
-    )
+class FilteringAndOrderingTestCase(APITestCase):
+    def setUp(self):
+        self.agent1 = Agent(name="Adalbert Erl", address="Bookstreet 12")
+        self.agent1.save()
+        self.agent2 = Agent(name="Balthasar König", address="Pagepassage 98")
+        self.agent2.save()
+        self.author = Author(name="John", age=20, agent=self.agent1)
+        self.author.save()
+        self.author2 = Author(name="Jane", age=30, agent=self.agent2)
+        self.author2.save()
 
+        Book(
+            name="Book1",
+            pages=100,
+            price=10.50,
+            rating=4.5,
+            author=self.author,
+            pubdate="2020-01-01",
+        ).save()
+        Book(
+            name="Book2",
+            pages=200,
+            price=12.49,
+            rating=4.0,
+            author=self.author,
+            pubdate="2020-01-02",
+        ).save()
+        Book(
+            name="Book3",
+            pages=300,
+            price=19.99,
+            rating=3.5,
+            author=self.author,
+            pubdate="2020-01-03",
+        ).save()
+        Book(
+            name="Book4",
+            pages=400,
+            price=09.99,
+            rating=3.2,
+            author=self.author,
+            pubdate="2020-01-04",
+        ).save()
+        Book(
+            name="Book5",
+            pages=500,
+            price=23.99,
+            rating=3.5,
+            author=self.author2,
+            pubdate="2020-01-05",
+        ).save()
+        Book(
+            name="Book6",
+            pages=600,
+            price=20.99,
+            rating=2.0,
+            author=self.author2,
+            pubdate="2020-01-06",
+        ).save()
+        Book(
+            name="Book7",
+            pages=700,
+            price=16.00,
+            rating=4.7,
+            author=self.author2,
+            pubdate="2020-01-07",
+        ).save()
+        Book(
+            name="Book8",
+            pages=800,
+            price=28.99,
+            rating=3.9,
+            author=self.author2,
+            pubdate="2020-01-08",
+        ).save()
 
-def normalize(value):
-    # Float sums and averages differ in the last digits between databases.
-    if isinstance(value, (float, Decimal)):
-        return round(float(value), 6)
-    return value
+        book1 = Book.objects.get(name="Book1")
+        book2 = Book.objects.get(name="Book2")
+        book3 = Book.objects.get(name="Book3")
+        book4 = Book.objects.get(name="Book4")
+        book5 = Book.objects.get(name="Book5")
+        book6 = Book.objects.get(name="Book6")
+        book7 = Book.objects.get(name="Book7")
+        book8 = Book.objects.get(name="Book8")
 
+        self.store = Store(name="Store1")
+        self.store.save()
+        self.store.books.set([book1, book3, book5, book7])
 
-class AggregationTestCase(APITestCase):
-    def aggregate(self, basename, **params):
-        return self.client.get(reverse(f"{basename}-aggregation"), params)
-
-    def get_rows(self, basename, **params):
-        """Request an aggregation, check for 200 and return the rows (unwrapped if paginated)."""
-        response = self.aggregate(basename, **params)
-        self.assertEqual(response.status_code, 200, response.data)
-        if isinstance(response.data, dict):
-            return response.data["results"]
-        return response.data
-
-    def get_error(self, basename, **params):
-        """Request an aggregation, check for 400 and return the error message."""
-        response = self.aggregate(basename, **params)
-        self.assertEqual(response.status_code, 400, response.data)
-        return response.data["error"]
-
-    def assertRows(self, rows, expected, *, ordered=True):
-        """Compare result rows; ``ordered=False`` for results without a total ``ordering``."""
-        rows = [{key: normalize(value) for key, value in row.items()} for row in rows]
-        expected = [{key: normalize(value) for key, value in row.items()} for row in expected]
-        if ordered:
-            self.assertEqual(rows, expected)
-        else:
-            self.assertCountEqual(rows, expected)
-
-
-class BookStoreTestCase(AggregationTestCase):
-    """Two authors with agents, eight books and two stores, shared by filtering and ordering tests."""
-
-    @classmethod
-    def setUpTestData(cls):
-        agent1 = Agent.objects.create(name="Adalbert Erl", address="Bookstreet 12")
-        agent2 = Agent.objects.create(name="Balthasar König", address="Pagepassage 98")
-        cls.author = Author.objects.create(name="John", age=20, agent=agent1)
-        cls.author2 = Author.objects.create(name="Jane", age=30, agent=agent2)
-        book1 = create_book(1, cls.author, 10.50, "4.5")
-        book2 = create_book(2, cls.author, 12.49, "4.0")
-        book3 = create_book(3, cls.author, 19.99, "3.5")
-        book4 = create_book(4, cls.author, 9.99, "3.2")
-        book5 = create_book(5, cls.author2, 23.99, "3.5")
-        book6 = create_book(6, cls.author2, 20.99, "2.0")
-        book7 = create_book(7, cls.author2, 16.00, "4.7")
-        book8 = create_book(8, cls.author2, 28.99, "3.9")
-
-        cls.store = Store.objects.create(name="Store1")
-        cls.store.books.set([book1, book3, book5, book7])
-        cls.store2 = Store.objects.create(name="Store2")
-        cls.store2.books.set([book2, book4, book6, book8])
-
-    def sum_pages_by_author_and_store(self, basename="book", **params):
-        return self.get_rows(basename, aggregation="sum", aggregation_field="pages", group_by="author,stores", **params)
+        self.store2 = Store(name="Store2")
+        self.store2.save()
+        self.store2.books.set([book2, book4, book6, book8])

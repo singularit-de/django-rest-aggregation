@@ -186,7 +186,7 @@ separately from `get_filtered_params()`. Both have to stay in sync. Also:
 `test_sum` and `test_avg` compare `76.96000000000001` with `76.96` (verified on Django 4.2.30, 5.2 and 6.1.2,
 SQLite 3.46).
 
-**Fixed:** `assertRows()` in the tests compares floats and decimals rounded to 6 places.
+**Fixed:** the two float comparisons in `test_sum` and `test_avg` use `assertAlmostEqual`.
 
 ---
 

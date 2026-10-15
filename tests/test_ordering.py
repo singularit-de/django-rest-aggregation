@@ -1,27 +1,65 @@
-from tests.base import BookStoreTestCase
+from tests.base import FilteringAndOrderingTestCase
 
 
-class OrderingTests(BookStoreTestCase):
-    def test_ordering_by_aggregation(self):
-        ascending = [
-            {"author": self.author.pk, "stores": self.store.pk, "value": 400},
-            {"author": self.author.pk, "stores": self.store2.pk, "value": 600},
-            {"author": self.author2.pk, "stores": self.store.pk, "value": 1200},
-            {"author": self.author2.pk, "stores": self.store2.pk, "value": 1400},
-        ]
-        self.assertRows(self.sum_pages_by_author_and_store(ordering="value"), ascending)
-        self.assertRows(self.sum_pages_by_author_and_store(ordering="-value"), ascending[::-1])
-
-    def test_ordering_by_group_by_field(self):
-        rows = self.get_rows(
-            "book",
-            aggregation="sum",
-            aggregation_field="pages",
-            group_by="author__name,stores",
-            ordering="-author__name,stores",
+class TestOrdering(FilteringAndOrderingTestCase):
+    def test_ordering_aggregation(self):
+        # ordering by aggregation
+        response = self.client.get(
+            "/book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "pages",
+                "group_by": "author,stores",
+                "ordering": "value",
+            },
+            format="json",
         )
-        self.assertRows(
-            rows,
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data,
+            [
+                {"author": self.author.pk, "stores": self.store.pk, "value": 400},
+                {"author": self.author.pk, "stores": self.store2.pk, "value": 600},
+                {"author": self.author2.pk, "stores": self.store.pk, "value": 1200},
+                {"author": self.author2.pk, "stores": self.store2.pk, "value": 1400},
+            ],
+        )
+
+        response = self.client.get(
+            "/book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "pages",
+                "group_by": "author,stores",
+                "ordering": "-value",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data,
+            [
+                {"author": self.author2.pk, "stores": self.store2.pk, "value": 1400},
+                {"author": self.author2.pk, "stores": self.store.pk, "value": 1200},
+                {"author": self.author.pk, "stores": self.store2.pk, "value": 600},
+                {"author": self.author.pk, "stores": self.store.pk, "value": 400},
+            ],
+        )
+
+    def test_ordering(self):
+        response = self.client.get(
+            "/book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "pages",
+                "group_by": "author__name,stores",
+                "ordering": "-author__name",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data,
             [
                 {"author__name": "John", "stores": self.store.pk, "value": 400},
                 {"author__name": "John", "stores": self.store2.pk, "value": 600},
@@ -31,39 +69,62 @@ class OrderingTests(BookStoreTestCase):
         )
 
     def test_ordering_by_multiple_fields(self):
-        jane = [
-            {"author__name": "Jane", "stores": self.store.pk, "value": 1200},
-            {"author__name": "Jane", "stores": self.store2.pk, "value": 1400},
-        ]
-        john = [
-            {"author__name": "John", "stores": self.store.pk, "value": 400},
-            {"author__name": "John", "stores": self.store2.pk, "value": 600},
-        ]
-        cases = [
-            ("author__name,value", jane + john),
-            ("author__name,-value", jane[::-1] + john[::-1]),
-        ]
-        for ordering, expected in cases:
-            with self.subTest(ordering=ordering):
-                rows = self.get_rows(
-                    "book",
-                    aggregation="sum",
-                    aggregation_field="pages",
-                    group_by="author__name,stores",
-                    ordering=ordering,
-                )
-                self.assertRows(rows, expected)
-
-    def test_ordering_by_related_field(self):
-        rows = self.get_rows(
-            "book",
-            aggregation="sum",
-            aggregation_field="pages",
-            group_by="author__name,stores",
-            ordering="author__agent__name,stores",
+        response = self.client.get(
+            "/book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "pages",
+                "group_by": "author__name,stores",
+                "ordering": "author__name,value",
+            },
+            format="json",
         )
-        self.assertRows(
-            rows,
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data,
+            [
+                {"author__name": "Jane", "stores": self.store.pk, "value": 1200},
+                {"author__name": "Jane", "stores": self.store2.pk, "value": 1400},
+                {"author__name": "John", "stores": self.store.pk, "value": 400},
+                {"author__name": "John", "stores": self.store2.pk, "value": 600},
+            ],
+        )
+
+        response = self.client.get(
+            "/book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "pages",
+                "group_by": "author__name,stores",
+                "ordering": "author__name,-value",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data,
+            [
+                {"author__name": "Jane", "stores": self.store2.pk, "value": 1400},
+                {"author__name": "Jane", "stores": self.store.pk, "value": 1200},
+                {"author__name": "John", "stores": self.store2.pk, "value": 600},
+                {"author__name": "John", "stores": self.store.pk, "value": 400},
+            ],
+        )
+
+    def test_multi_relation_ordering(self):
+        response = self.client.get(
+            "/book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "pages",
+                "group_by": "author__name,stores",
+                "ordering": "author__agent__name",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data,
             [
                 {"author__name": "John", "stores": self.store.pk, "value": 400},
                 {"author__name": "John", "stores": self.store2.pk, "value": 600},

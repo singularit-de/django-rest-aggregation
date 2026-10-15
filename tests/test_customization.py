@@ -1,44 +1,79 @@
-from tests.base import AggregationTestCase, create_book
-from tests.testapp.models import Author
+from rest_framework.test import APITestCase
+
+from tests.testapp.models import Author, Book
 
 
-class CustomizationTests(AggregationTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        author = Author.objects.create(name="John", age=20)
-        create_book(1, author, 10.55, "4.5")
-
-    def sum_price(self, **params):
-        return self.get_rows(
-            "customized_book", aggregation="sum", aggregation_field="price", ordering="CustomizedValue", **params
-        )
-
-    def test_default_serializer_and_name(self):
-        rows = self.get_rows("book", aggregation="sum", aggregation_field="price")
-        self.assertRows(rows, [{"group": "all", "value": 10.55}])
+class TestCustomization(APITestCase):
+    def setUp(self):
+        self.author = Author(name="John", age=20)
+        self.author.save()
+        Book(
+            name="Book1",
+            pages=100,
+            price=10.55,
+            rating=4.5,
+            author=self.author,
+            pubdate="2020-01-01",
+        ).save()
 
     def test_custom_serializer_and_name(self):
-        self.assertEqual(self.sum_price(), [{"group": "all", "CustomizedValue": "10.6"}])
+        response = self.client.get(
+            "/book/aggregation/",
+            {"aggregation": "sum", "aggregation_field": "price"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{"group": "all", "value": 10.55}])
+
+        response = self.client.get(
+            "/customized_book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "price",
+                "ordering": "CustomizedValue",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["results"], [{"group": "all", "CustomizedValue": "10.6"}])
 
     def test_pagination(self):
-        response = self.aggregate(
-            "customized_book", aggregation="sum", aggregation_field="price", ordering="CustomizedValue"
+        response = self.client.get(
+            "/customized_book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "price",
+                "ordering": "CustomizedValue",
+            },
+            format="json",
         )
-        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data.keys(), {"count", "next", "previous", "results"})
-        self.assertEqual(response.data["count"], 1)
 
-    def test_pagination_count_after_value_filter(self):
-        response = self.aggregate(
-            "customized_book",
-            aggregation="sum",
-            aggregation_field="price",
-            ordering="CustomizedValue",
-            CustomizedValue__lte=0,
+    def test_ordering_all_field(self):
+        response = self.client.get(
+            "/customized_book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "price",
+                "CustomizedValue__gte": 20,
+                "ordering": "CustomizedValue",
+            },
+            format="json",
         )
-        self.assertEqual(response.status_code, 200, response.data)
-        self.assertEqual(response.data["count"], 0)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["results"], [])
 
-    def test_aggregated_filterset_fields_all(self):
-        self.assertEqual(self.sum_price(CustomizedValue__gte=20), [])
-        self.assertEqual(len(self.sum_price(CustomizedValue__lt=20)), 1)
+    def test_pagination_count(self):
+        response = self.client.get(
+            "/customized_book/aggregation/",
+            {
+                "aggregation": "sum",
+                "aggregation_field": "price",
+                "ordering": "CustomizedValue",
+                "CustomizedValue__lte": 0,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 0)

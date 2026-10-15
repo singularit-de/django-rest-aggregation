@@ -37,26 +37,22 @@ Layout:
 |------|----------|
 | `tests/settings.py` | Test project settings, database selection |
 | `tests/testapp/` | Test app: models `Agent`, `Author`, `Book`, `Store`, four ViewSets that cover the features, their urls, serializers, filters and pagination |
-| `tests/base.py` | `AggregationTestCase` with the request and assertion helpers, `create_book()`, `BookStoreTestCase` (fixture shared by filtering and ordering tests) |
-| `tests/test_aggregations.py` | Aggregation functions and aliases, query count |
+| `tests/base.py` | `FilteringAndOrderingTestCase`: the `setUp` shared by the filtering and ordering tests |
+| `tests/test_aggregations.py` | Aggregation functions on number and date fields |
 | `tests/test_grouping.py` | `group_by` on fields, relations and annotations |
 | `tests/test_validation.py` | Error responses for invalid parameters |
 | `tests/test_filtering.py` | View filters before and value filters after aggregation |
 | `tests/test_ordering.py` | `ordering` on the aggregated result |
 | `tests/test_customization.py` | Custom name, serializer, pagination |
 
-Conventions:
+Known weak spots, to be reworked later:
 
-- Fixtures are created once per class in `setUpTestData`.
-- URLs come from the router: `reverse("book-aggregation")`; the helper `aggregate("book", **params)` wraps it.
-- `get_rows()` asserts status 200 and unwraps paginated results, `get_error()` asserts 400 and returns
-  the error message, `assertRows()` compares rows. Floats and decimals are compared rounded to 6 places,
-  since databases differ in the last digits. Results without a total `ordering` use `ordered=False`, since
-  row order is not defined there.
-- Variations of one behaviour are a case table with `subTest`.
-- One test per behaviour; behaviour changes need a new or adjusted test.
+- Several tests compare result lists in a fixed order although the request has no total `ordering`
+  (e.g. plain `group_by`). SQLite happens to return a stable order; PostgreSQL and SQL Server need not, so these
+  tests may fail there.
+- Fixtures are created per test in `setUp` and URLs are hard-coded (`/book/aggregation/`).
 
-State on 2026-10-15: all 30 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
+State on 2026-10-15: all 25 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
 (SQLite 3.46), also with `--shuffle`, `--reverse` and `-W error::DeprecationWarning`. CI runs the other
 combinations.
 

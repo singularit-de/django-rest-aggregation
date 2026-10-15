@@ -29,11 +29,10 @@ uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); als
 - Database: in-memory SQLite by default; `DB_BACKEND=postgres|mysql|mariadb|mssql` plus optional
   `DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT` select another one (`tests/settings.py`).
 - Test layout: `tests/settings.py`, the test app `tests/testapp/` (models, views, urls, serializers, filters,
-  pagination), helpers and shared fixtures in `tests/base.py`, tests in `tests/test_<topic>.py`.
-- Test conventions: fixtures in `setUpTestData`, URLs via
-  `reverse("<basename>-aggregation")`, helpers `get_rows` / `get_error` / `assertRows` on `AggregationTestCase`,
-  `subTest` for case tables. Floats are compared rounded; results without a total `ordering` are compared with
-  `ordered=False`, because row order is not defined across databases.
+  pagination), the shared `setUp` of the filtering and ordering tests in `tests/base.py`, tests in
+  `tests/test_<topic>.py`.
+- Several tests expect a row order without a total `ordering`, which only SQLite happens to keep stable; they may
+  fail on PostgreSQL / SQL Server until the tests are reworked.
 
 ## Code map
 
