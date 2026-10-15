@@ -15,3 +15,10 @@ repos:
         language: system
         types_or: [python, pyi]
         require_serial: true
+      - id: ty
+        name: ty check
+        entry: uv run --frozen ty check
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false
+        require_serial: true

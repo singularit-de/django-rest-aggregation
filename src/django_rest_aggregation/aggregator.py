@@ -1,10 +1,17 @@
+from typing import TYPE_CHECKING, Any, TypedDict
+
 from django.core.exceptions import FieldDoesNotExist, FieldError
 from django.db import models
 from django.db.models import Case, Value, When
+from django.db.models.fields.reverse_related import ForeignObjectRel
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
 from .enums import Aggregation
+
+if TYPE_CHECKING:
+    # Not imported at runtime: it needs django.contrib.contenttypes in INSTALLED_APPS.
+    from django.contrib.contenttypes.fields import GenericForeignKey
 
 NUMBER_FIELD_TYPES = {
     "FloatField",
@@ -22,23 +29,34 @@ NUMBER_FIELD_TYPES = {
 DATE_FIELD_TYPES = {"DateField", "DateTimeField"}
 
 
-def get_filtered_params(request):
-    params = {}
+class AggregationParams(TypedDict, total=False):
+    aggregation: str
+    aggregation_field: str
+    group_by: list[str]
+
+
+def get_filtered_params(request: Request) -> AggregationParams:
+    raw: dict[str, str] = {}
     for key in ["aggregation", "aggregation_field", "group_by"]:
         if len(request.query_params.getlist(key, [])) == 1:
-            params[key] = request.query_params.getlist(key)[0]
+            raw[key] = request.query_params.getlist(key)[0]
         if len(request.query_params.getlist(key, [])) > 1:
             error_message = (
                 f"Only one {key} is allowed" if key != "group_by" else "please use comma separated values for grouping"
             )
             raise ValidationError({"error": error_message})
 
-    if params.get("group_by") is not None:
-        params["group_by"] = [field.strip() for field in params["group_by"].split(",")]
+    params = AggregationParams()
+    if "aggregation" in raw:
+        params["aggregation"] = raw["aggregation"]
+    if "aggregation_field" in raw:
+        params["aggregation_field"] = raw["aggregation_field"]
+    if "group_by" in raw:
+        params["group_by"] = [field.strip() for field in raw["group_by"].split(",")]
     return params
 
 
-def get_annotation(params, name):
+def get_annotation(params: AggregationParams, name: str) -> dict[str, models.Aggregate]:
     aggregation = params.get("aggregation")
     aggregation_field = params.get("aggregation_field")
 
@@ -57,49 +75,61 @@ def get_annotation(params, name):
     if aggregation in Aggregation.MAX.value:
         return {name: models.Max(aggregation_field)}
 
+    # Unreachable after Aggregator.validate_params().
+    raise ValueError(f"Unknown aggregation {aggregation!r}")
 
-def model_field_exists(field_name, model):
+
+def get_model_field(
+    field_name: str, model: type[models.Model]
+) -> "models.Field[Any, Any] | ForeignObjectRel | GenericForeignKey":
+    """Resolve a ``__``-separated field path; raises ``FieldDoesNotExist`` if a part is missing."""
     fields = field_name.split("__")
+    field = model._meta.get_field(fields[0])
+    for part in fields[1:]:
+        related_model = field.related_model
+        if not isinstance(related_model, type):
+            # not a relation, so the path cannot continue
+            raise FieldDoesNotExist(f"{field_name!r} is not a valid field path")
+        field = related_model._meta.get_field(part)
+    return field
+
+
+def model_field_exists(field_name: str, model: type[models.Model]) -> bool:
     try:
-        field = model._meta.get_field(fields[0])
-        for part in fields[1:]:
-            field = field.related_model._meta.get_field(part)
-    except (FieldDoesNotExist, AttributeError):
+        get_model_field(field_name, model)
+    except FieldDoesNotExist:
         return False
     return True
 
 
-def annotation_field_exists(field_name, queryset):
+def annotation_field_exists(field_name: str, queryset: models.QuerySet[Any, Any]) -> bool:
     return field_name in queryset.query.annotations
 
 
-def field_exists(field_name, model, queryset):
+def field_exists(field_name: str, model: type[models.Model], queryset: models.QuerySet[Any, Any]) -> bool:
     return model_field_exists(field_name, model) or annotation_field_exists(field_name, queryset)
 
 
-def get_field_type(field_name, model, queryset):
+def get_field_type(field_name: str, model: type[models.Model], queryset: models.QuerySet[Any, Any]) -> str | None:
     if annotation_field_exists(field_name, queryset):
         try:
-            return queryset.query.annotations.get(field_name).output_field.get_internal_type()
+            return queryset.query.annotations[field_name].output_field.get_internal_type()
         except FieldError:
             # e.g. mixed types without an explicit output_field; rejected by the type check
             return None
     elif model_field_exists(field_name, model):
-        fields = field_name.split("__")
-        field = model._meta.get_field(fields[0])
-        for part in fields[1:]:
-            field = field.related_model._meta.get_field(part)
-        return field.get_internal_type()
+        return get_model_field(field_name, model).get_internal_type()
+    return None
 
 
 class Aggregator:
-    def __init__(self, request: Request, queryset: models.QuerySet, aggregation_name: str):
+    def __init__(self, request: Request, queryset: models.QuerySet[Any, Any], aggregation_name: str) -> None:
         self.params = get_filtered_params(request)
         self.queryset = queryset
-        self.model = queryset.model
+        self.model: type[models.Model] = queryset.model
         self.aggregation_name = aggregation_name
 
-    def get_aggregated_queryset(self):
+    def get_aggregated_queryset(self) -> models.QuerySet[Any, dict[str, Any]]:
         self.validate_params()
 
         if (group_by := self.params.get("group_by", ["group"])) == ["group"]:
@@ -109,7 +139,7 @@ class Aggregator:
 
         return self.queryset.values(*group_by).annotate(**get_annotation(self.params, self.aggregation_name))
 
-    def validate_params(self):
+    def validate_params(self) -> None:
         # check if aggregation is in params and is valid
         if (aggregation := self.params.get("aggregation", None)) is None:
             raise ValidationError({"error": "'aggregation' is required"})
