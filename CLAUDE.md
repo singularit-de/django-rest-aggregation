@@ -72,11 +72,11 @@ All code in `src/` is fully typed, and every new or changed function there must 
   becomes part of `GROUP BY` and silently produces wrong results. `get_aggregated_queryset()` clears earlier
   ordering and `order_aggregated_queryset()` only accepts result columns; keep both (wrong groups, ordering oracle).
 - Every field path a client can name must go through `Aggregator.field_allowed()` (allowlist from
-  `get_aggregation_fields()`, serializer fields by default). New features must not add data paths around it,
-  or hidden fields leak; disallowed fields get the same error as unknown ones.
+  `get_aggregation_fields()`, serializer fields by default, plus paths through `get_aggregation_models()`).
+  New features must not add data paths around it, or hidden fields leak; disallowed fields get the same error as unknown ones.
 - Public API names users rely on: `aggregation_name`, `aggregation_serializer_class`,
   `aggregated_filterset_class`, `aggregated_filterset_fields`, `aggregated_ordering_fields`, `aggregation_fields`,
-  `aggregation_max_group_by`, the overridable
+  `aggregation_models`, `aggregation_max_group_by`, the overridable
   methods on the mixin, and the query parameters `aggregation`, `aggregation_field`, `group_by`, `ordering`,
   `<name>__<lookup>`. Renames need deprecation aliases.
 - Runtime dependencies are lower bounds only (library, no `~=` pins): Python ≥ 3.10, Django ≥ 5.2, DRF ≥ 3.16,

@@ -36,7 +36,7 @@ The documentation is split into small linked notes in [`Readme/`](https://github
 - [Grouping](https://github.com/singularit-de/django-rest-aggregation/blob/main/Readme/grouping.md): `group_by`, relation paths, multiple fields
 - [Filtering](https://github.com/singularit-de/django-rest-aggregation/blob/main/Readme/filtering.md): filtering before and after aggregation, value FilterSets
 - [Ordering](https://github.com/singularit-de/django-rest-aggregation/blob/main/Readme/ordering.md): `ordering`, allowed fields, pitfalls
-- [Field access](https://github.com/singularit-de/django-rest-aggregation/blob/main/Readme/field-access.md): which fields `group_by` / `aggregation_field` may use, limits
+- [Field access](https://github.com/singularit-de/django-rest-aggregation/blob/main/Readme/field-access.md): which fields `group_by` / `aggregation_field` may use (`aggregation_fields`, `aggregation_models`), limits
 - [Customization](https://github.com/singularit-de/django-rest-aggregation/blob/main/Readme/customization.md): value name, serializer, pagination, overridable hooks
 - [View attributes](https://github.com/singularit-de/django-rest-aggregation/blob/main/Readme/view-attributes.md): reference of all class attributes
 

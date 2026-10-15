@@ -21,6 +21,12 @@ class BookSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class BookSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ["name", "pages", "author"]
+
+
 class PublisherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Publisher

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from typing import TYPE_CHECKING, Any, Literal
 
-from django.db.models import QuerySet
+from django.apps import apps
+from django.db.models import Model, QuerySet
 from django_filters import FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
@@ -11,7 +12,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
-from .aggregator import DEFAULT_MAX_GROUP_BY, Aggregator, AllowedFields
+from .aggregator import DEFAULT_MAX_GROUP_BY, Aggregator, AllowedFields, AllowedModels
 from .filter import FilterFields, ValueFilter
 from .serializers import AggregationSerializer
 
@@ -32,6 +33,7 @@ class AggregationMixin(_MixinBase):
     aggregated_filterset_fields: FilterFields
     aggregated_ordering_fields: Sequence[str] | Literal["__all__"]
     aggregation_fields: AllowedFields
+    aggregation_models: Collection[type[Model] | str]
     aggregation_max_group_by: int | None
 
     @action(methods=["get"], detail=False, url_path="aggregation", url_name="aggregation")
@@ -43,6 +45,7 @@ class AggregationMixin(_MixinBase):
             queryset,
             self.get_aggregation_name(),
             allowed_fields=self.get_aggregation_fields(),
+            allowed_models=self.get_aggregation_models(),
             max_group_by=self.get_aggregation_max_group_by(),
         )
         queryset = aggregator.get_aggregated_queryset()
@@ -84,6 +87,16 @@ class AggregationMixin(_MixinBase):
             for field in serializer_fields.values()
             if not field.write_only and field.source and field.source != "*"
         }
+
+    def get_aggregation_models(self) -> AllowedModels:
+        """Related models whose fields are allowed in group_by and aggregation_field, in addition to
+        ``get_aggregation_fields()``.
+
+        A relation path is allowed if every model it passes through after the view's model is listed, given as
+        class or ``"app_label.ModelName"``. The view's model itself must be listed for paths that lead back to it.
+        """
+        listed = getattr(self, "aggregation_models", None) or ()
+        return {apps.get_model(model) if isinstance(model, str) else model for model in listed}
 
     def get_aggregation_max_group_by(self) -> int | None:
         """Maximum number of group_by fields; None means no limit."""

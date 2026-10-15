@@ -15,10 +15,11 @@ Package: `src/django_rest_aggregation/` (about 300 lines).
 
 1. `self.filter_queryset(self.get_queryset())`: the view's normal filter backends
    (including `OrderingFilter`) run on the model queryset.
-2. `Aggregator(request, queryset, name, allowed_fields=…, max_group_by=…)` (`allowed_fields` is required, no
+2. `Aggregator(request, queryset, name, allowed_fields=…, allowed_models=…, max_group_by=…)` (`allowed_fields` is required, no
    fail-open default): `get_filtered_params()` reads
    `aggregation`, `aggregation_field` and `group_by` from the query string. The allowed fields come from
-   `get_aggregation_fields()` (serializer fields by default).
+   `get_aggregation_fields()` (serializer fields by default), the allowed related models from
+   `get_aggregation_models()`.
 3. `Aggregator.get_aggregated_queryset()`:
    - `validate_params()` checks the aggregation, field existence, allowlist, number of group fields and field type
    - without `group_by`, annotates a constant `group` column

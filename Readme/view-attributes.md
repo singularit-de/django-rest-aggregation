@@ -10,6 +10,7 @@ Class attributes `AggregationMixin` reads from the view:
 | `aggregated_filterset_fields` | – | Shortcut: lookups for value filters, or `"__all__"` | [Filtering](filtering.md) |
 | `aggregated_ordering_fields` | falls back to `ordering_fields` | Further restricts `ordering` terms | [Ordering](ordering.md) |
 | `aggregation_fields` | readable fields of the view's serializer | Fields allowed in `group_by` and `aggregation_field`, or `"__all__"` | [Field access](field-access.md) |
+| `aggregation_models` | – | Related models whose fields are allowed in addition, as classes or `"app_label.ModelName"` | [Field access](field-access.md) |
 | `aggregation_max_group_by` | `3` | Maximum number of `group_by` fields, `None` for no limit | [Field access](field-access.md) |
 
 Earlier versions of the README called two of these `aggregated_filtering_class` and
