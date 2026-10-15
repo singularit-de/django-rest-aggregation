@@ -39,7 +39,7 @@ Instead of listing every path, release whole related models with `aggregation_mo
 ```python
 class BookViewSet(AggregationMixin, GenericViewSet):
     queryset = Book.objects.all()
-    serializer_class = BookSerializer          # Book fields: what the serializer shows
+    serializer_class = BookSerializer  # Book fields: what the serializer shows
     aggregation_models = [Author, "shop.Store"]
 ```
 
