@@ -57,9 +57,10 @@ uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); als
   `<name>__<lookup>`. Renames need deprecation aliases.
 - Runtime dependencies are lower bounds only (library, no `~=` pins): Python ≥ 3.10, Django ≥ 5.2, DRF ≥ 3.16,
   django-filter ≥ 25.1 (first releases supporting Django 5.2). Keep `classifiers` in sync when support changes.
-  Maintenance priority: PKG-4, then SEC-1, BUG-1, BUG-2.
+  Maintenance priority: SEC-1, BUG-1, BUG-2, then the rest of PKG-4.
 - Behaviour changes need a test in the matching `tests/test_<topic>.py` (test app models: `Agent`, `Author`,
   `Book`, `Store`; ViewSets in `tests/testapp/views.py`).
 - Release: bump `version` in `pyproject.toml`, create a GitHub release → `publish.yml` uploads to PyPI.
-  CI (`ci.yml`) only runs ruff, no tests yet (PKG-4), so run tests locally before releasing.
+  CI (`ci.yml`, every push) runs ruff and the tests (Python × Django matrix, lowest deps, PostgreSQL,
+  SQL Server), but `publish.yml` does not wait for it (PKG-4), so check that CI is green before releasing.
 - Commit style: conventional prefixes (`feat:`, `fix:`, `chore:`, `refactor:`, `test:`).

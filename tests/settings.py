@@ -48,6 +48,8 @@ DB_BACKENDS = {
         "PASSWORD": "yourStrong(!)Password",
         "HOST": "127.0.0.1",
         "PORT": "1433",
+        # mssql-python ships its own ODBC Driver 18, so no system ODBC packages are needed.
+        "OPTIONS": {"python_driver": "mssql_python", "extra_params": "TrustServerCertificate=yes"},
     },
 }
 # MariaDB uses Django's MySQL backend.

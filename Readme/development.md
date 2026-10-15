@@ -6,7 +6,7 @@
 uv sync                      # package (editable) + runtime deps + dev group (coverage, ruff, pre-commit)
 uv run pre-commit install    # ruff check --fix and ruff format before every commit
 uv sync --group postgres     # adds psycopg2-binary
-uv sync --group mssql        # adds mssql-django, which needs system ODBC packages
+uv sync --group mssql        # adds mssql-django (tests use its bundled mssql-python driver)
 ```
 
 Dependencies live in `pyproject.toml` (`[project.dependencies]` and `[dependency-groups]`);
@@ -57,7 +57,19 @@ Conventions:
 - One test per behaviour; behaviour changes need a new or adjusted test.
 
 State on 2026-10-15: all 30 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
-(SQLite 3.46), also with `--shuffle`, `--reverse` and `-W error::DeprecationWarning`.
+(SQLite 3.46), also with `--shuffle`, `--reverse` and `-W error::DeprecationWarning`. CI runs the other
+combinations.
+
+### CI
+
+`.github/workflows/ci.yml` runs on every push to any branch (and manually via `workflow_dispatch`):
+
+- `test`: Python 3.10–3.14 × Django 5.2 / 6.0 / 6.1 (Django 6.x only on 3.12+) on SQLite, with
+  `-W error::DeprecationWarning` so Django deprecations fail early.
+- `test-lowest`: Python 3.10 with the lowest declared versions (`--resolution lowest-direct`).
+- `test-postgres`: lowest and latest combination against a PostgreSQL 17 service.
+- `test-mssql`: the same two combinations against a SQL Server 2022 service. The test settings use
+  mssql-django's `mssql_python` driver, which ships ODBC Driver 18, so no system ODBC packages are needed.
 
 ## Lint
 
@@ -72,8 +84,8 @@ Ruff runs in two places, both with the version pinned in `uv.lock`:
 - **pre-commit hook** (`.pre-commit-config.yaml`): fixes and formats staged files and aborts the commit
   if it changed anything; review and stage the changes, then commit again.
   `uv run pre-commit run --all-files` checks the whole repo.
-- **CI** (`.github/workflows/ci.yml`, job `Ruff`): runs `ruff check` and `ruff format --check` on pushes to
-  `main` and on pull requests. It also fails if `uv.lock` is out of date (`uv sync --locked`).
+- **CI** (`.github/workflows/ci.yml`, job `Ruff`): runs `ruff check` and `ruff format --check` on every push.
+  It also fails if `uv.lock` is out of date (`uv sync --locked`).
 
 Test other versions without touching `.venv`:
 
@@ -89,6 +101,6 @@ uv run --isolated --with "django<6" runtests.py                          # Djang
 3. Create a GitHub release. `.github/workflows/publish.yml` builds with `uv build` and uploads to PyPI with
    trusted publishing (environment `pypi`).
 
-No workflow runs the tests ([PKG-4](issues.md#pkg-4-no-ci-for-tests)).
+`publish.yml` does not wait for CI ([PKG-4](issues.md#pkg-4-no-ci-for-tests)), so check that CI is green first.
 
 Related: [Architecture](architecture.md) · [Issues](issues.md)

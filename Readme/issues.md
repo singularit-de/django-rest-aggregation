@@ -215,8 +215,9 @@ against the source tree instead of the installed package and only worked from th
 `ci.yml` runs ruff on pushes to `main` and on pull requests, but no tests. `publish.yml` is triggered on
 `release: created` and does not wait for CI.
 
-**Fix:** a test job in `ci.yml` (matrix of Python × Django, SQLite plus PostgreSQL service);
-publish only after it passes, trigger on `release: published`.
+**Partly fixed:** `ci.yml` has test jobs (Python × Django matrix on SQLite, lowest dependencies,
+PostgreSQL and SQL Server services, on every push). Still open: publish only after CI passes, trigger on
+`release: published`.
 
 ## PKG-5 Packaging metadata and tooling
 
