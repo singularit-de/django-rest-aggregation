@@ -1,13 +1,14 @@
-from django.db.models import F, Case, When, Value, BooleanField, CharField
+from django.db.models import BooleanField, Case, CharField, F, Value, When
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 
 from src.django_rest_aggregation.mixins import AggregationMixin
-from .filters import BookFilter, Test123Filter, AuthorFilter
-from .models import Book, Store, Author
+
+from .filters import AuthorFilter, BookFilter, Test123Filter
+from .models import Author, Book, Store
 from .pagination import StandardResultsSetPagination
-from .serializer import BookSerializer, StoreSerializer, AuthorSerializer
+from .serializer import AuthorSerializer, BookSerializer, StoreSerializer
 from .serializers import CustomAggregationSerializer
 
 

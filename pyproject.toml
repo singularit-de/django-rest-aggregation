@@ -15,6 +15,7 @@ dependencies = [
     "Django>=5.2",
     "djangorestframework>=3.16",
     "django-filter>=25.1",
+    "djangorestframework-stubs>=3.18.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

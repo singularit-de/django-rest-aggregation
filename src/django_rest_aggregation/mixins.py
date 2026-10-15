@@ -17,10 +17,7 @@ class AggregationMixin:
         queryset = self.filter_aggregated_queryset(queryset)
         queryset = self.order_aggregated_queryset(queryset)
 
-        context = {
-            "request": request,
-            "name": self.get_aggregation_name()
-        }
+        context = {"request": request, "name": self.get_aggregation_name()}
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_aggregation_serializer_class(page, many=True, context=context)
@@ -52,7 +49,7 @@ class AggregationMixin:
     def order_aggregated_queryset(self, queryset):
         params = self.request.query_params.get("ordering")
         if params:
-            fields = [param.strip() for param in params.split(',')]
+            fields = [param.strip() for param in params.split(",")]
             ordering = self.remove_invalid_ordering_fields(queryset, fields)
             if ordering:
                 return queryset.order_by(*ordering)
@@ -66,8 +63,7 @@ class AggregationMixin:
             return fields
 
         def term_valid(term):
-            if term.startswith("-"):
-                term = term[1:]
+            term = term.removeprefix("-")
             return term in ordering_fields
 
         return [term for term in fields if term_valid(term)]
@@ -75,4 +71,4 @@ class AggregationMixin:
 
 class HelperView:
     def __init__(self, filterset_class):
-        setattr(self, "filterset_class", filterset_class)
+        self.filterset_class = filterset_class

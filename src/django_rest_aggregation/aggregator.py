@@ -1,6 +1,6 @@
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models import Case, When, Value
+from django.db.models import Case, Value, When
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
@@ -18,7 +18,7 @@ def get_filtered_params(request):
             )
             raise ValidationError({"error": error_message})
 
-    if params.get("group_by", None) is not None:
+    if params.get("group_by") is not None:
         params["group_by"] = params["group_by"].split(",")
     return params
 
@@ -47,8 +47,8 @@ def model_field_exists(field_name, model):
     fields = field_name.split("__")
     try:
         field = model._meta.get_field(fields[0])
-        for field_name in fields[1:]:
-            field = field.related_model._meta.get_field(field_name)
+        for part in fields[1:]:
+            field = field.related_model._meta.get_field(part)
     except (FieldDoesNotExist, AttributeError):
         return False
     return True
@@ -68,8 +68,8 @@ def get_field_type(field_name, model, queryset):
     elif model_field_exists(field_name, model):
         fields = field_name.split("__")
         field = model._meta.get_field(fields[0])
-        for field_name in fields[1:]:
-            field = field.related_model._meta.get_field(field_name)
+        for part in fields[1:]:
+            field = field.related_model._meta.get_field(part)
         return field.get_internal_type()
 
 
@@ -84,9 +84,9 @@ class Aggregator:
         self.validate_params()
 
         if (group_by := self.params.get("group_by", ["group"])) == ["group"]:
-            self.queryset = self.queryset.annotate(group=Case(
-                When(pk__isnull=False, then=Value("all")),
-                default=Value("test")))
+            self.queryset = self.queryset.annotate(
+                group=Case(When(pk__isnull=False, then=Value("all")), default=Value("test"))
+            )
 
         return self.queryset.values(*group_by).annotate(**get_annotation(self.params, self.aggregation_name))
 

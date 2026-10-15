@@ -19,7 +19,7 @@ about 300 lines in `src/django_rest_aggregation/`.
 ```bash
 uv sync                                 # creates .venv: package, runtime deps, dev group
 uv run runtests.py                      # Django test runner, settings: tests.settings, SQLite by default
-uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml)
+uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); also runs as pre-commit hook and in CI
 ```
 
 - uv only, no pip / `requirements*.txt`. Dependencies are in `pyproject.toml` (`dependencies`, `[dependency-groups]`
@@ -55,5 +55,5 @@ uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml)
 - Behaviour changes need a test in `tests/test_aggregation.py` (test app models: `Agent`, `Author`, `Book`,
   `Store`; ViewSets in `tests/views.py`).
 - Release: bump `version` in `pyproject.toml`, create a GitHub release → `publish.yml` uploads to PyPI.
-  There is no test CI yet, so run tests locally before releasing.
+  CI (`ci.yml`) only runs ruff, no tests yet (PKG-4), so run tests locally before releasing.
 - Commit style: conventional prefixes (`feat:`, `fix:`, `chore:`, `refactor:`, `test:`).

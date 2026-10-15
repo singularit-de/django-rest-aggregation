@@ -3,7 +3,8 @@
 ## Setup
 
 ```bash
-uv sync                      # package (editable) + runtime deps + dev group (coverage, ruff)
+uv sync                      # package (editable) + runtime deps + dev group (coverage, ruff, pre-commit)
+uv run pre-commit install    # ruff check --fix and ruff format before every commit
 uv sync --group postgres     # adds psycopg2-binary
 uv sync --group mssql        # adds mssql-django, which needs system ODBC packages
 ```
@@ -36,8 +37,15 @@ exact float comparisons
 uv run ruff check . && uv run ruff format --check .
 ```
 
-Config: `ruff.toml` (line length 120). ruff ≥ 0.17 currently reports 20 findings and 5 unformatted files
-([PKG-5](issues.md#pkg-5-packaging-metadata-and-tooling)).
+Config: `ruff.toml` (line length 120, explicit rule selection so ruff upgrades do not change the checks).
+
+Ruff runs in two places, both with the version pinned in `uv.lock`:
+
+- **pre-commit hook** (`.pre-commit-config.yaml`): fixes and formats staged files and aborts the commit
+  if it changed anything; review and stage the changes, then commit again.
+  `uv run pre-commit run --all-files` checks the whole repo.
+- **CI** (`.github/workflows/ci.yml`, job `Ruff`): runs `ruff check` and `ruff format --check` on pushes to
+  `main` and on pull requests. It also fails if `uv.lock` is out of date (`uv sync --locked`).
 
 Test other versions without touching `.venv`:
 

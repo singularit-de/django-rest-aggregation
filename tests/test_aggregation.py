@@ -3,7 +3,7 @@ import datetime
 from django.db import connection
 from rest_framework.test import APITestCase
 
-from tests.models import Author, Book, Store, Agent
+from tests.models import Agent, Author, Book, Store
 
 
 class TestBasicFunctionality(APITestCase):
@@ -54,7 +54,7 @@ class TestBasicFunctionality(APITestCase):
     def test_database(self):
         print("\n--- Database ---")
         print(connection.vendor)
-        if not connection.vendor == "microsoft":
+        if connection.vendor != "microsoft":
             print(connection.get_database_version())
         print("----------------\n")
 
@@ -379,7 +379,7 @@ class TestValidation(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.data["error"],
-            "'aggregation' must be one of ['average', 'avg', 'count', 'max', 'maximum', 'min', " "'minimum', 'sum']",
+            "'aggregation' must be one of ['average', 'avg', 'count', 'max', 'maximum', 'min', 'minimum', 'sum']",
         )
 
         response = self.client.get("/book/aggregation/", {"aggregation": ["test", 123]}, format="json")

@@ -12,7 +12,7 @@ class Agent(models.Model):
 class Author(models.Model):
     name = models.CharField(max_length=100)
     age = models.IntegerField()
-    agent =models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True)
+    agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.name

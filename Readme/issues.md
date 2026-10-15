@@ -29,7 +29,7 @@ Review of v0.4.0 (commit `20df1d3`), 2026-10-15.
 | [PKG-1](#pkg-1-runtime-dependencies-are-not-declared) | high | Dependencies not declared | **fixed** |
 | [PKG-2](#pkg-2-supported-versions-are-out-of-date) | high | Django 4.2 / Python 3.8 are EOL | **fixed** |
 | [PKG-3](#pkg-3-tests-import-from-src) | low | Tests import `src.` | from code |
-| [PKG-4](#pkg-4-no-ci-for-tests) | medium | No test CI | – |
+| [PKG-4](#pkg-4-no-ci-for-tests) | medium | No test CI | partly fixed |
 | [PKG-5](#pkg-5-packaging-metadata-and-tooling) | low | Metadata and tooling | – |
 | [PKG-6](#pkg-6-readme-links-on-pypi) | low | Relative README links on PyPI | – |
 | [OPT](#optimizations-and-ideas) | – | Optimizations and ideas | – |
@@ -212,17 +212,16 @@ instead of the installed package and only work from the repo root.
 
 ## PKG-4 No CI for tests
 
-Only `publish.yml` exists, triggered on `release: created`, without running tests first.
+`ci.yml` runs ruff on pushes to `main` and on pull requests, but no tests. `publish.yml` is triggered on
+`release: created` and does not wait for CI.
 
-**Fix:** a test workflow (matrix of Python × Django, SQLite plus PostgreSQL service), ruff check;
+**Fix:** a test job in `ci.yml` (matrix of Python × Django, SQLite plus PostgreSQL service);
 publish only after it passes, trigger on `release: published`.
 
 ## PKG-5 Packaging metadata and tooling
 
 - `pyproject.toml`: leftover `#Todo`, no `license`, no `__version__`.
 - `__init__.py` is empty; users import from `django_rest_aggregation.mixins`.
-- `ruff.toml` comment says 79 but sets 120. After the update to ruff 0.17, `ruff check` reports 20 findings
-  (mostly `RUF012`, `I001`) and `ruff format --check` 5 files; fix them or select rules in `ruff.toml`.
 - `runtests.py` contains commented-out coverage code; the SQLite DB is written to the repo root.
 
 ## PKG-6 README links on PyPI

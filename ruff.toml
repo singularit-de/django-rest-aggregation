@@ -1,2 +1,19 @@
-# Set the maximum line length to 79.
 line-length = 120
+
+[lint]
+# Explicit rule set, so a ruff upgrade does not silently change what is checked.
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "FURB", # refurb
+    "PLR1704", # redefined-argument-from-local
+    "RUF",
+]
+ignore = [
+    "RUF012", # DRF / django-filter configure views and FilterSets with mutable class attributes
+]
