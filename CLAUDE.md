@@ -31,8 +31,8 @@ uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); als
 - Test layout: `tests/settings.py`, the test app `tests/testapp/` (models, views, urls, serializers, filters,
   pagination), the shared `setUp` of the filtering and ordering tests in `tests/base.py`, tests in
   `tests/test_<topic>.py`.
-- Several tests expect a row order without a total `ordering`, which only SQLite happens to keep stable; they may
-  fail on PostgreSQL / SQL Server until the tests are reworked.
+- Without `ordering` the row order is not defined (PostgreSQL / SQL Server differ from SQLite). Tests that expect
+  several rows pass a total `ordering` on `group_by` fields only; ordering on other fields changes the grouping (BUG-1).
 
 ## Code map
 

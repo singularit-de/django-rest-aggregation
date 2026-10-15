@@ -53,7 +53,7 @@ class TestOrdering(FilteringAndOrderingTestCase):
                 "aggregation": "sum",
                 "aggregation_field": "pages",
                 "group_by": "author__name,stores",
-                "ordering": "-author__name",
+                "ordering": "-author__name,stores",
             },
             format="json",
         )
@@ -118,7 +118,7 @@ class TestOrdering(FilteringAndOrderingTestCase):
                 "aggregation": "sum",
                 "aggregation_field": "pages",
                 "group_by": "author__name,stores",
-                "ordering": "author__agent__name",
+                "ordering": "author__agent__name,stores",
             },
             format="json",
         )

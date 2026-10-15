@@ -70,7 +70,7 @@ class TestGroupingAndAnnotations(APITestCase):
         # Simple Group by
         response = self.client.get(
             "/book/aggregation/",
-            {"aggregation": "count", "group_by": "author"},
+            {"aggregation": "count", "group_by": "author", "ordering": "author"},
             format="json",
         )
         self.assertEqual(response.status_code, 200)
@@ -85,7 +85,7 @@ class TestGroupingAndAnnotations(APITestCase):
         # Groupy by multiple fields
         response = self.client.get(
             "/book/aggregation/",
-            {"aggregation": "count", "group_by": "stores__name,author__name"},
+            {"aggregation": "count", "group_by": "stores__name,author__name", "ordering": "stores__name,author__name"},
             format="json",
         )
         self.assertEqual(response.status_code, 200)
@@ -105,7 +105,7 @@ class TestGroupingAndAnnotations(APITestCase):
         # Group by foreign key related field
         response = self.client.get(
             "/book/aggregation/",
-            {"aggregation": "count", "group_by": "author__name"},
+            {"aggregation": "count", "group_by": "author__name", "ordering": "author__name"},
             format="json",
         )
         self.assertEqual(response.status_code, 200)
@@ -124,6 +124,7 @@ class TestGroupingAndAnnotations(APITestCase):
                 "aggregation": "sum",
                 "aggregation_field": "books__pages",
                 "group_by": "books__author__age",
+                "ordering": "books__author__age",
             },
             format="json",
         )
@@ -153,6 +154,7 @@ class TestGroupingAndAnnotations(APITestCase):
                 "aggregation": "avg",
                 "aggregation_field": "price",
                 "group_by": "expensive",
+                "ordering": "expensive",
             },
             format="json",
         )

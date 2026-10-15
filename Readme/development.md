@@ -45,11 +45,13 @@ Layout:
 | `tests/test_ordering.py` | `ordering` on the aggregated result |
 | `tests/test_customization.py` | Custom name, serializer, pagination |
 
+Without `ordering` the row order of an aggregation is not defined: SQLite happens to return rows sorted by the
+group columns, PostgreSQL and SQL Server need not. Every test that expects several rows therefore passes an
+`ordering` that fixes the order completely, using `group_by` fields only (ordering on other fields adds them to
+`GROUP BY` and changes the result, see [BUG-1](issues.md#bug-1-ordering-by-a-non-grouped-field-breaks-the-aggregation)).
+
 Known weak spots, to be reworked later:
 
-- Several tests compare result lists in a fixed order although the request has no total `ordering`
-  (e.g. plain `group_by`). SQLite happens to return a stable order; PostgreSQL and SQL Server need not, so these
-  tests may fail there.
 - Fixtures are created per test in `setUp` and URLs are hard-coded (`/book/aggregation/`).
 
 State on 2026-10-15: all 25 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
