@@ -1,11 +1,14 @@
+from collections.abc import Mapping
+from typing import Any
+
 from rest_framework import serializers
 
 
 class PassTroughField(serializers.Field):
-    def to_representation(self, value):
+    def to_representation(self, value: Any) -> Any:
         return value
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data: Any) -> Any:
         return data
 
 
@@ -17,10 +20,10 @@ class AggregationSerializer(serializers.Serializer):
 
     value = serializers.SerializerMethodField(method_name="serialize_value")
 
-    def serialize_value(self, obj):
+    def serialize_value(self, obj: Mapping[str, Any]) -> Any:
         return obj["value"]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         # Instantiate the superclass normally
         super().__init__(*args, **kwargs)
 

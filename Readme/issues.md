@@ -257,7 +257,7 @@ keep the README's install and quickstart text self-contained.
 - Several aggregations per request (`aggregation=sum,avg`) in one query.
 - `count_distinct` / `distinct=True` option, since joins can count rows twice.
 - Standard DRF error shape (`{"aggregation": ["…"]}`) instead of `{"error": "…"}`.
-- Type hints and a `py.typed` marker.
+- ~~Type hints and a `py.typed` marker.~~ Done: `src/` is fully typed, checked with ty, and ships `py.typed`.
 - Replace `HelperView` by calling the FilterSet directly:
   `filterset_class(request.query_params, queryset=qs, request=request).qs`.
 - Document that the action inherits the view's permissions and `get_queryset()` scoping.

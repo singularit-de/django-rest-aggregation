@@ -42,6 +42,7 @@ dev = [
     "coverage>=7.16",
     "pre-commit>=4.6.2",
     "ruff>=0.17",
+    "ty>=0.0.88",
 ]
 postgres = ["psycopg2-binary>=2.9.10"]
 mssql = ["mssql-django>=2.0"]
@@ -53,3 +54,7 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
+
+[tool.ty.src]
+# Only the package is typed; tests are not checked.
+include = ["src"]

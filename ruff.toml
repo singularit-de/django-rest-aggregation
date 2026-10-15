@@ -13,7 +13,13 @@ select = [
     "FURB", # refurb
     "PLR1704", # redefined-argument-from-local
     "RUF",
+    "ANN",  # flake8-annotations: everything in src/ is typed (tests are not, see per-file-ignores)
 ]
 ignore = [
     "RUF012", # DRF / django-filter configure views and FilterSets with mutable class attributes
+    "ANN401", # Any is allowed where values are really arbitrary (serializer fields, *args/**kwargs)
 ]
+
+[lint.per-file-ignores]
+"tests/**" = ["ANN"]
+"runtests.py" = ["ANN"]

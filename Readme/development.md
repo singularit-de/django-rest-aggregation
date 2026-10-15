@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-uv sync                      # package (editable) + runtime deps + dev group (coverage, ruff, pre-commit)
+uv sync                      # package (editable) + runtime deps + dev group (coverage, ruff, ty, pre-commit)
 uv run pre-commit install    # ruff check --fix and ruff format before every commit
 uv sync --group postgres     # adds psycopg2-binary
 uv sync --group mssql        # adds mssql-django (tests use its bundled mssql-python driver)
@@ -68,21 +68,27 @@ combinations.
 - `test-mssql`: the same two combinations against a SQL Server 2022 service. The test settings use
   mssql-django's `mssql_python` driver, which ships ODBC Driver 18, so no system ODBC packages are needed.
 
-## Lint
+## Lint and type check
 
 ```bash
 uv run ruff check . && uv run ruff format --check .
+uv run ty check
 ```
 
-Config: `ruff.toml` (line length 120, explicit rule selection so ruff upgrades do not change the checks).
+Config: `ruff.toml` (line length 120, explicit rule selection so ruff upgrades do not change the checks) and
+`[tool.ty]` in `pyproject.toml`.
 
-Ruff runs in two places, both with the version pinned in `uv.lock`:
+The package in `src/` is fully typed and ships a `py.typed` marker. ruff's `ANN` rules require annotations
+for every function in `src/` (`tests/` is exempt), and [ty](https://docs.astral.sh/ty/) checks that the types
+are correct; it only checks `src/`. The rules for new code are in `CLAUDE.md` (section "Typing").
+
+Ruff and ty run in two places, both with the versions pinned in `uv.lock`:
 
 - **pre-commit hook** (`.pre-commit-config.yaml`): fixes and formats staged files and aborts the commit
-  if it changed anything; review and stage the changes, then commit again.
+  if it changed anything, then runs `ty check`; review and stage the changes, then commit again.
   `uv run pre-commit run --all-files` checks the whole repo.
-- **CI** (`.github/workflows/ci.yml`, job `Ruff`): runs `ruff check` and `ruff format --check` on every push.
-  It also fails if `uv.lock` is out of date (`uv sync --locked`).
+- **CI** (`.github/workflows/ci.yml`, job `Ruff`): runs `ruff check`, `ruff format --check` and `ty check` on every
+  push. It also fails if `uv.lock` is out of date (`uv sync --locked`).
 
 Test other versions without touching `.venv`:
 

@@ -21,6 +21,7 @@ uv sync                                 # creates .venv: package, runtime deps, 
 uv run runtests.py                      # = manage.py test with tests.settings; args are passed through
 uv run coverage run runtests.py && uv run coverage report
 uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); also runs as pre-commit hook and in CI
+uv run ty check                         # type check of src/ ([tool.ty] in pyproject.toml); pre-commit hook and CI
 ```
 
 - uv only, no pip / `requirements*.txt`. Dependencies are in `pyproject.toml` (`dependencies`, `[dependency-groups]`
@@ -33,6 +34,21 @@ uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); als
   `tests/test_<topic>.py`.
 - Without `ordering` the row order is not defined (PostgreSQL / SQL Server differ from SQLite). Tests that expect
   several rows pass a total `ordering` on `group_by` fields only; ordering on other fields changes the grouping (BUG-1).
+
+## Typing
+
+All code in `src/` is fully typed, and every new or changed function there must be too:
+
+- Annotate every parameter and return type (ruff `ANN` rules enforce this for `src/`; tests are exempt).
+- `uv run ty check` must pass with no diagnostics; do not silence errors with `# type: ignore` / `# ty: ignore`
+  unless a third-party gap makes it unavoidable, and then say why in a comment.
+- Python 3.10 syntax only (`X | None`, `list[str]`; no `typing.Self`, no PEP 695 generics).
+- Imports needed only for annotations go under `if TYPE_CHECKING:` when importing them at runtime has side effects
+  or requirements (e.g. `django.contrib.contenttypes`, which needs the app installed).
+- Use the existing types instead of re-describing them: `AggregationParams` (parsed query parameters),
+  `FilterFields` (`aggregated_filterset_fields`). The mixin is typed against `GenericAPIView` via `_MixinBase`;
+  new view attributes it reads get an annotation-only declaration on `AggregationMixin`.
+- `py.typed` ships with the package, so the types are part of the public API.
 
 ## Code map
 
