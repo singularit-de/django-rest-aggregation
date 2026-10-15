@@ -137,7 +137,7 @@ class Aggregator:
         allowed_fields: AllowedFields,
         max_group_by: int | None = DEFAULT_MAX_GROUP_BY,
     ) -> None:
-        """``allowed_fields`` has no default on purpose: callers decide which fields clients may use (SEC-1)."""
+        """``allowed_fields`` has no default on purpose: callers decide which fields clients may use."""
         self.params = get_filtered_params(request)
         self.queryset = queryset
         self.model: type[models.Model] = queryset.model
@@ -146,7 +146,7 @@ class Aggregator:
         self.max_group_by = max_group_by
 
     def field_allowed(self, field_name: str) -> bool:
-        """Field exists and the view allows it (SEC-1). Disallowed fields get the same error as unknown ones."""
+        """Field exists and the view allows it. Disallowed fields get the same error as unknown ones."""
         if self.allowed_fields != "__all__" and field_name not in self.allowed_fields:
             return False
         return field_exists(field_name, self.model, self.queryset)
@@ -159,7 +159,7 @@ class Aggregator:
                 group=Case(When(pk__isnull=False, then=Value("all")), default=Value("test"))
             )
 
-        # order_by(): an ordering from before the aggregation would be added to GROUP BY (BUG-1).
+        # order_by(): an ordering from before the aggregation would be added to GROUP BY and break the groups.
         return self.queryset.order_by().values(*group_by).annotate(**get_annotation(self.params, self.aggregation_name))
 
     def validate_params(self) -> None:

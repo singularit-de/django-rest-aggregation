@@ -204,13 +204,13 @@ class TestFieldTypes(APITestCase):
         Publisher(code="P2", name="Pagepress", revenue=2_000_000_000, employees=50, founded=1990).save()
 
     def test_count_with_primary_key_not_named_id(self):
-        # BUG-4
+        # count must not assume a primary key named id
         response = self.client.get("/publisher/aggregation/", {"aggregation": "count"}, format="json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, [{"group": "all", "value": 2}])
 
     def test_integer_field_variants(self):
-        # BUG-5: BigIntegerField, PositiveIntegerField, SmallIntegerField
+        # integer types other than IntegerField: BigIntegerField, PositiveIntegerField, SmallIntegerField
         cases = [
             ("sum", "revenue", 5_000_000_000),
             ("sum", "employees", 150),

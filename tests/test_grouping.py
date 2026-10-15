@@ -102,7 +102,7 @@ class TestGroupingAndAnnotations(APITestCase):
         )
 
     def test_group_by_with_whitespace(self):
-        # BUG-8
+        # spaces after the commas are ignored
         response = self.client.get(
             "/book/aggregation/",
             {"aggregation": "count", "group_by": "author__name, stores__name", "ordering": "author__name,stores__name"},

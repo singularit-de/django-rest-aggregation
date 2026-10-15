@@ -115,7 +115,7 @@ class TestOrdering(FilteringAndOrderingTestCase):
         )
 
     def test_ordering_by_non_grouped_field_is_ignored(self):
-        # author__agent__name is not a result column: ignored, so only "value" orders (BUG-1, SEC-2)
+        # author__agent__name is not a result column: ignored, so only "value" orders
         response = self.client.get(
             "/book/aggregation/",
             {
@@ -140,7 +140,7 @@ class TestOrdering(FilteringAndOrderingTestCase):
 
 class TestOrderingFieldsAsString(SimpleTestCase):
     def test_string_ordering_fields_match_whole_names(self):
-        # BUG-10: ordering_fields = "name" must not allow "na"
+        # ordering_fields = "name" must not allow "na"
         view = AggregationMixin()
         view.ordering_fields = "name"
         self.assertEqual(view.remove_invalid_ordering_fields(None, ["na", "name", "-name"]), ["name", "-name"])

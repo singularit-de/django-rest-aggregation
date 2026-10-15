@@ -181,7 +181,7 @@ class TestFiltering(FilteringAndOrderingTestCase):
         )
 
     def test_value_filters_do_not_leak_between_views(self):
-        # BUG-2: value filters of one view must not show up in another view
+        # value filters of one view must not show up in another view
         response = self.client.get(
             "/customized_book/aggregation/",
             {"aggregation": "sum", "aggregation_field": "price", "CustomizedValue__gte": 0},

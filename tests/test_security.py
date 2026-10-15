@@ -13,7 +13,7 @@ class TestSecurity(APITestCase):
         Book.objects.create(name="C", pages=300, price=30, rating=2, author=self.jane, pubdate="2020-01-03")
 
     def test_group_by_outside_allowlist_is_rejected(self):
-        # SEC-1: the book API does not expose agents
+        # the book API does not expose agents
         response = self.client.get(
             "/book/aggregation/", {"aggregation": "count", "group_by": "author__agent__address"}, format="json"
         )
@@ -21,7 +21,7 @@ class TestSecurity(APITestCase):
         self.assertEqual(response.data["error"], "'group_by' is not valid")
 
     def test_aggregation_field_outside_allowlist_is_rejected(self):
-        # SEC-1
+        # the book API does not expose author__age
         response = self.client.get(
             "/book/aggregation/", {"aggregation": "max", "aggregation_field": "author__age"}, format="json"
         )
@@ -29,7 +29,7 @@ class TestSecurity(APITestCase):
         self.assertEqual(response.data["error"], "'aggregation_field' is not valid")
 
     def test_default_allowlist_is_the_serializer_fields(self):
-        # SEC-1: customized_book sets no aggregation_fields; BookSerializer exposes author, not author__name
+        # customized_book sets no aggregation_fields; BookSerializer exposes author, not author__name
         response = self.client.get(
             "/customized_book/aggregation/", {"aggregation": "count", "group_by": "author"}, format="json"
         )
@@ -41,7 +41,7 @@ class TestSecurity(APITestCase):
         self.assertEqual(response.data["error"], "'group_by' is not valid")
 
     def test_ordering_by_non_grouped_field_keeps_grouping(self):
-        # BUG-1 / SEC-2: "name" is ignored, both in the view's OrderingFilter and after the aggregation
+        # "name" is not a result column and is ignored, both in the view's OrderingFilter and after the aggregation
         response = self.client.get(
             "/book/aggregation/",
             {"aggregation": "count", "group_by": "author", "ordering": "name,author"},
@@ -54,7 +54,7 @@ class TestSecurity(APITestCase):
         )
 
     def test_unknown_ordering_field_is_ignored(self):
-        # BUG-3: 200 instead of 500
+        # unknown term: 200, not 500
         response = self.client.get(
             "/book/aggregation/",
             {"aggregation": "count", "group_by": "author", "ordering": "doesnotexist,author"},
@@ -67,7 +67,7 @@ class TestSecurity(APITestCase):
         )
 
     def test_group_by_field_limit(self):
-        # SEC-3: at most 3 group_by fields by default
+        # at most 3 group_by fields by default
         response = self.client.get(
             "/book/aggregation/", {"aggregation": "count", "group_by": "name,pages,price,rating"}, format="json"
         )

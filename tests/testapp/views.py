@@ -25,7 +25,7 @@ class BookViewSet(viewsets.ModelViewSet, AggregationMixin):
     filterset_class = BookFilter
     ordering_fields = "__all__"
     aggregated_filterset_fields = ["gte", "lte", "gt", "lt", "exact"]
-    # Relations beyond the serializer are allowed explicitly; author__agent__* is not (SEC-1).
+    # Relations beyond the serializer are allowed explicitly; author__agent__* is not.
     aggregation_fields = [
         "name",
         "pages",

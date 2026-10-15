@@ -6,11 +6,13 @@ about 300 lines in `src/django_rest_aggregation/`.
 
 ## Documentation layout
 
-- `README.md` is only a signpost: short pitch, install, one example, links.
+- `README.md` is only a signpost: short pitch, install, one example, links. It is also the PyPI description,
+  so its links are absolute GitHub URLs (`…/blob/main/Readme/<note>.md`), never relative paths.
 - `Readme/` holds atomic notes, one topic per file, linked to each other. Add new content as a new note
   or into the matching note, and link it from `README.md`.
 - `Readme/issues.md` is the backlog of known vulnerabilities, bugs and packaging problems with IDs
-  (`SEC-n`, `BUG-n`, `PKG-n`). Reference these IDs in commits and remove or mark entries when fixed.
+  (`SEC-n`, `BUG-n`, `PKG-n`). It lists open issues only: reference the ID in the fixing commit and remove the
+  entry (and links to it from other notes) when fixed. IDs are never reused.
   Keep the "verified / from code" status honest.
 - Docs are in English (public package).
 
@@ -33,7 +35,7 @@ uv run ty check                         # type check of src/ ([tool.ty] in pypro
   pagination), the shared `setUp` of the filtering and ordering tests in `tests/base.py`, tests in
   `tests/test_<topic>.py`.
 - Without `ordering` the row order is not defined (PostgreSQL / SQL Server differ from SQLite). Tests that expect
-  several rows pass a total `ordering` on `group_by` fields only; ordering on other fields changes the grouping (BUG-1).
+  several rows pass a total `ordering` on `group_by` fields only; ordering on other fields changes the grouping.
 
 ## Typing
 
@@ -64,10 +66,10 @@ All code in `src/` is fully typed, and every new or changed function there must 
 
 - The aggregated queryset is a `.values().annotate()` queryset: any `order_by` field outside `group_by`
   becomes part of `GROUP BY` and silently produces wrong results. `get_aggregated_queryset()` clears earlier
-  ordering and `order_aggregated_queryset()` only accepts result columns; keep both (BUG-1, SEC-2).
+  ordering and `order_aggregated_queryset()` only accepts result columns; keep both (wrong groups, ordering oracle).
 - Every field path a client can name must go through `Aggregator.field_allowed()` (allowlist from
-  `get_aggregation_fields()`, serializer fields by default). New features must not add data paths around it
-  (SEC-1); disallowed fields get the same error as unknown ones.
+  `get_aggregation_fields()`, serializer fields by default). New features must not add data paths around it,
+  or hidden fields leak; disallowed fields get the same error as unknown ones.
 - Public API names users rely on: `aggregation_name`, `aggregation_serializer_class`,
   `aggregated_filterset_class`, `aggregated_filterset_fields`, `aggregated_ordering_fields`, `aggregation_fields`,
   `aggregation_max_group_by`, the overridable

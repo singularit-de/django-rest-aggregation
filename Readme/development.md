@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-uv sync                      # package (editable) + runtime deps + dev group (coverage, ruff, ty, pre-commit)
+uv sync                      # package (editable) + runtime deps + dev group (coverage, ruff, ty, type stubs, pre-commit)
 uv run pre-commit install    # ruff check --fix and ruff format before every commit
 uv sync --group postgres     # adds psycopg2-binary
 uv sync --group mssql        # adds mssql-django (tests use its bundled mssql-python driver)
@@ -49,7 +49,7 @@ Layout:
 Without `ordering` the row order of an aggregation is not defined: SQLite happens to return rows sorted by the
 group columns, PostgreSQL and SQL Server need not. Every test that expects several rows therefore passes an
 `ordering` that fixes the order completely, using `group_by` fields only (ordering on other fields adds them to
-`GROUP BY` and changes the result, see [BUG-1](issues.md#bug-1-ordering-by-a-non-grouped-field-breaks-the-aggregation)).
+`GROUP BY` and changes the result; the package ignores such terms, see [Ordering](ordering.md)).
 
 Known weak spots, to be reworked later:
 

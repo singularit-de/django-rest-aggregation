@@ -17,7 +17,6 @@ dependencies = [
     "Django>=5.2",
     "djangorestframework>=3.16",
     "django-filter>=25.1",
-    "djangorestframework-stubs>=3.18.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -36,10 +35,12 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/singularit-de/django-rest-aggregation/"
 "Bug Tracker" = "https://github.com/singularit-de/django-rest-aggregation/issues"
+"Documentation" = "https://github.com/singularit-de/django-rest-aggregation/tree/main/Readme"
 
 [dependency-groups]
 dev = [
     "coverage>=7.16",
+    "djangorestframework-stubs>=3.18.0",
     "pre-commit>=4.6.2",
     "ruff>=0.17",
     "ty>=0.0.88",

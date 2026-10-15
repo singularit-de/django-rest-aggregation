@@ -68,7 +68,7 @@ class AggregationMixin(_MixinBase):
         return "value"
 
     def get_aggregation_fields(self) -> AllowedFields:
-        """Fields allowed in group_by and aggregation_field (SEC-1).
+        """Fields allowed in group_by and aggregation_field.
 
         Defaults to the fields the view's serializer exposes for reading, so aggregation reveals nothing the
         normal API does not. ``aggregation_fields = "__all__"`` allows every model field and annotation.
@@ -84,7 +84,7 @@ class AggregationMixin(_MixinBase):
         }
 
     def get_aggregation_max_group_by(self) -> int | None:
-        """Maximum number of group_by fields (SEC-3); None means no limit."""
+        """Maximum number of group_by fields; None means no limit."""
         return getattr(self, "aggregation_max_group_by", DEFAULT_MAX_GROUP_BY)
 
     def filter_aggregated_queryset(self, queryset: QuerySet[Any, Any]) -> QuerySet[Any, Any]:
@@ -102,7 +102,7 @@ class AggregationMixin(_MixinBase):
         if params:
             fields = [param.strip() for param in params.split(",")]
             # Only the result columns (group_by fields and the value) can be ordered by: other fields would
-            # change the GROUP BY (BUG-1), leak hidden values (SEC-2) or be unknown (BUG-3). Others are ignored.
+            # change the GROUP BY, leak hidden values through the order, or be unknown. Others are ignored.
             columns = {*queryset.query.values_select, *queryset.query.annotation_select}
             fields = [term for term in fields if term.removeprefix("-") in columns]
             ordering = self.remove_invalid_ordering_fields(queryset, fields)
