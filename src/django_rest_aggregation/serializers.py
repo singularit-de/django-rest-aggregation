@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -15,7 +17,6 @@ class PassTroughField(serializers.Field):
 class AggregationSerializer(serializers.Serializer):
     """
     Serializer for aggregation requests.
-    Authored by Tim Streicher
     """
 
     value = serializers.SerializerMethodField(method_name="serialize_value")

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -90,8 +92,8 @@ class AggregationMixin(_MixinBase):
     def filter_aggregated_queryset(self, queryset: QuerySet[Any, Any]) -> QuerySet[Any, Any]:
         filterset_class = getattr(self, "aggregated_filterset_class", None)
         if filterset_class is None:
-            fields = getattr(self, "aggregated_filterset_fields", None) or []
-            filterset_class = ValueFilter.with_filter_fields(fields, self.get_aggregation_name())
+            lookups = getattr(self, "aggregated_filterset_fields", None) or []
+            filterset_class = ValueFilter.with_filter_fields(lookups, self.get_aggregation_name())
         helper_view = HelperView(filterset_class)
         queryset = DjangoFilterBackend().filter_queryset(self.request, queryset, helper_view)
 
@@ -99,31 +101,26 @@ class AggregationMixin(_MixinBase):
 
     def order_aggregated_queryset(self, queryset: QuerySet[Any, Any]) -> QuerySet[Any, Any]:
         params = self.request.query_params.get("ordering")
-        if params:
-            fields = [param.strip() for param in params.split(",")]
-            # Only the result columns (group_by fields and the value) can be ordered by: other fields would
-            # change the GROUP BY, leak hidden values through the order, or be unknown. Others are ignored.
-            columns = {*queryset.query.values_select, *queryset.query.annotation_select}
-            fields = [term for term in fields if term.removeprefix("-") in columns]
-            ordering = self.remove_invalid_ordering_fields(queryset, fields)
-            if ordering:
-                return queryset.order_by(*ordering)
+        if not params:
+            return queryset
 
-        return queryset
+        # Only result columns (group_by fields and the value): other fields would change the GROUP BY,
+        # leak hidden values through the order, or be unknown. Terms outside are ignored.
+        allowed = {*queryset.query.values_select, *queryset.query.annotation_select}
+        # The view can narrow this down, never widen it.
+        restriction = getattr(self, "aggregated_ordering_fields", None) or getattr(self, "ordering_fields", None)
+        if isinstance(restriction, str):
+            restriction = [restriction]
+        if restriction and "__all__" not in restriction:
+            allowed &= set(restriction)
 
-    def remove_invalid_ordering_fields(self, queryset: QuerySet[Any, Any], fields: list[str]) -> list[str]:
-        ordering_fields = getattr(self, "aggregated_ordering_fields", None) or getattr(self, "ordering_fields", None)
-        if isinstance(ordering_fields, str) and ordering_fields != "__all__":
-            ordering_fields = [ordering_fields]
+        ordering = []
+        for param in params.split(","):
+            term = param.strip()
+            if term.removeprefix("-") in allowed:
+                ordering.append(term)
 
-        if not ordering_fields or ("__all__" in ordering_fields) or (ordering_fields == "__all__"):
-            return fields
-
-        def term_valid(term: str) -> bool:
-            term = term.removeprefix("-")
-            return term in ordering_fields
-
-        return [term for term in fields if term_valid(term)]
+        return queryset.order_by(*ordering) if ordering else queryset
 
 
 class HelperView:

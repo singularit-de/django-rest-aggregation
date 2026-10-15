@@ -20,6 +20,10 @@ ignore = [
     "ANN401", # Any is allowed where values are really arbitrary (serializer fields, *args/**kwargs)
 ]
 
+[lint.isort]
+# Annotations are never evaluated at runtime, so TYPE_CHECKING-only imports need no quotes (Python 3.10 has no PEP 649).
+required-imports = ["from __future__ import annotations"]
+
 [lint.per-file-ignores]
-"tests/**" = ["ANN"]
-"runtests.py" = ["ANN"]
+"tests/**" = ["ANN", "I002"]
+"runtests.py" = ["ANN", "I002"]
