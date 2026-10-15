@@ -63,17 +63,18 @@ All code in `src/` is fully typed, and every new or changed function there must 
 ## Things to keep in mind
 
 - The aggregated queryset is a `.values().annotate()` queryset: any `order_by` field outside `group_by`
-  becomes part of `GROUP BY` and silently produces wrong results (BUG-1). Test grouping changes with
-  ordering applied.
-- `group_by` / `aggregation_field` currently expose any model field (SEC-1). Do not widen what is reachable
-  without an allowlist; new features must not add new data paths.
+  becomes part of `GROUP BY` and silently produces wrong results. `get_aggregated_queryset()` clears earlier
+  ordering and `order_aggregated_queryset()` only accepts result columns; keep both (BUG-1, SEC-2).
+- Every field path a client can name must go through `Aggregator.field_allowed()` (allowlist from
+  `get_aggregation_fields()`, serializer fields by default). New features must not add data paths around it
+  (SEC-1); disallowed fields get the same error as unknown ones.
 - Public API names users rely on: `aggregation_name`, `aggregation_serializer_class`,
-  `aggregated_filterset_class`, `aggregated_filterset_fields`, `aggregated_ordering_fields`, the overridable
+  `aggregated_filterset_class`, `aggregated_filterset_fields`, `aggregated_ordering_fields`, `aggregation_fields`,
+  `aggregation_max_group_by`, the overridable
   methods on the mixin, and the query parameters `aggregation`, `aggregation_field`, `group_by`, `ordering`,
   `<name>__<lookup>`. Renames need deprecation aliases.
 - Runtime dependencies are lower bounds only (library, no `~=` pins): Python ≥ 3.10, Django ≥ 5.2, DRF ≥ 3.16,
   django-filter ≥ 25.1 (first releases supporting Django 5.2). Keep `classifiers` in sync when support changes.
-  Maintenance priority: SEC-1, BUG-1 (with BUG-3, SEC-2).
 - Behaviour changes need a test in the matching `tests/test_<topic>.py` (test app models: `Agent`, `Author`,
   `Book`, `Publisher`, `Store`; ViewSets in `tests/testapp/views.py`).
 - CI (`ci.yml`, every push) runs ruff and the tests (Python × Django matrix, PostgreSQL, SQL Server).

@@ -114,14 +114,15 @@ class TestOrdering(FilteringAndOrderingTestCase):
             ],
         )
 
-    def test_multi_relation_ordering(self):
+    def test_ordering_by_non_grouped_field_is_ignored(self):
+        # author__agent__name is not a result column: ignored, so only "value" orders (BUG-1, SEC-2)
         response = self.client.get(
             "/book/aggregation/",
             {
                 "aggregation": "sum",
                 "aggregation_field": "pages",
                 "group_by": "author__name,stores",
-                "ordering": "author__agent__name,stores",
+                "ordering": "author__agent__name,value",
             },
             format="json",
         )

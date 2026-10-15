@@ -9,12 +9,12 @@ Review of v0.4.0 (commit `20df1d3`), 2026-10-15.
 
 | ID | Severity | Topic | Status |
 |----|----------|-------|--------|
-| [SEC-1](#sec-1-any-model-field-can-be-read-through-group_by-and-aggregation_field) | high | Data exposure via `group_by` / `aggregation_field` | verified |
-| [SEC-2](#sec-2-ordering-is-permissive-by-default) | medium | Ordering on any field by default | verified |
-| [SEC-3](#sec-3-no-limit-on-query-cost) | medium | No limit on query cost | from code |
-| [BUG-1](#bug-1-ordering-by-a-non-grouped-field-breaks-the-aggregation) | high | Ordering breaks `GROUP BY`, wrong results | verified |
+| [SEC-1](#sec-1-any-model-field-can-be-read-through-group_by-and-aggregation_field) | high | Data exposure via `group_by` / `aggregation_field` | **fixed** |
+| [SEC-2](#sec-2-ordering-is-permissive-by-default) | medium | Ordering on any field by default | **fixed** |
+| [SEC-3](#sec-3-no-limit-on-query-cost) | medium | No limit on query cost | **fixed** |
+| [BUG-1](#bug-1-ordering-by-a-non-grouped-field-breaks-the-aggregation) | high | Ordering breaks `GROUP BY`, wrong results | **fixed** |
 | [BUG-2](#bug-2-valuefilter-is-shared-mutable-state) | high | `ValueFilter` is shared mutable state | **fixed** |
-| [BUG-3](#bug-3-unknown-ordering-field-returns-500) | medium | Unknown ordering field → 500 | verified |
+| [BUG-3](#bug-3-unknown-ordering-field-returns-500) | medium | Unknown ordering field → 500 | **fixed** |
 | [BUG-4](#bug-4-count-assumes-a-primary-key-named-id) | medium | `count` assumes pk named `id` | **fixed** |
 | [BUG-5](#bug-5-numeric-type-check-is-too-narrow) | medium | Numeric type check too narrow | partly fixed |
 | [BUG-6](#bug-6-value-filters-are-always-numberfilter) | low | Value filters only numeric | verified |
@@ -48,9 +48,10 @@ Verified: the test `Book` API does not expose agents, yet
 `aggregation=max&aggregation_field=author__age` reads related values the same way.
 On a user model this could expose `password` hashes, emails or tokens through `group_by=user__password`.
 
-**Fix:** add allowlists such as `aggregation_group_by_fields` and `aggregation_fields`, and make the
-default restrictive (for example only the serializer's readable fields). This is a breaking change, so
-release it as 0.5/1.0 and document it.
+**Fixed:** one allowlist, `aggregation_fields`, for both parameters. The default is the readable fields of the
+view's serializer (`source` with `.` as `__`); `"__all__"` restores the old behaviour. Disallowed fields get the
+same 400 as unknown ones. **Breaking change:** relation paths not exposed by the serializer now need to be
+listed; release as 0.5. See [Field access](field-access.md). Tests: `tests/test_security.py`.
 
 ## SEC-2 Ordering is permissive by default
 
@@ -58,15 +59,20 @@ If neither `aggregated_ordering_fields` nor `ordering_fields` is set, any `order
 applied (`mixins.py:65`). Ordering by hidden or related fields lets clients infer their values
 (an ordering oracle), and unknown names cause a 500 (BUG-3).
 
-**Fix:** by default allow only the aggregation name and the active `group_by` fields
-(this also fixes BUG-1 and BUG-3).
+**Fixed:** `ordering` only accepts result columns (`group_by` fields, the aggregation name, `group`), read from
+the aggregated queryset; other terms are dropped. `aggregated_ordering_fields` / `ordering_fields` can only
+narrow this further. Tests: `test_ordering_by_non_grouped_field_keeps_grouping`,
+`test_ordering_by_non_grouped_field_is_ignored`.
 
 ## SEC-3 No limit on query cost
 
 There is no limit on the number of `group_by` fields or on relation depth. Paths over several
 ManyToMany relations produce large joins and group counts. Without pagination the full result is returned.
 
-**Fix:** a configurable maximum of group fields and relation depth; recommend pagination in the docs.
+**Fixed:** `aggregation_max_group_by` (default 3, `None` for no limit) caps the number of group fields.
+Relation depth is capped by the allowlist from SEC-1 instead of a separate setting: only listed or
+serializer-exposed paths work. The docs recommend pagination ([Field access](field-access.md)).
+Test: `test_group_by_field_limit`.
 
 ## BUG-1 Ordering by a non-grouped field breaks the aggregation
 
@@ -80,8 +86,8 @@ Verified, both paths: `/book/aggregation/?aggregation=count&group_by=author&orde
 returns `[{author:1, value:1}, {author:1, value:1}, {author:2, value:1}]` instead of
 `[{author:1, value:2}, {author:2, value:1}]`. The same happens with `aggregated_ordering_fields = ["value"]`.
 
-**Fix:** call `queryset.order_by()` before `.values()` in `get_aggregated_queryset()`, and only accept
-ordering terms in `{aggregation_name} ∪ group_by`.
+**Fixed:** `get_aggregated_queryset()` calls `order_by()` before `.values()`, and `ordering` only accepts result
+columns (SEC-2). Test: `test_ordering_by_non_grouped_field_keeps_grouping` (covers both paths).
 
 ## BUG-2 `ValueFilter` is shared mutable state
 
@@ -103,7 +109,8 @@ Test: `test_value_filters_do_not_leak_between_views`.
 With `ordering_fields = "__all__"` (or none), `?ordering=doesnotexist` raises `FieldError` → 500.
 Verified on `/book/aggregation/?aggregation=count&group_by=author&ordering=doesnotexist`.
 
-**Fix:** validate terms (see BUG-1) and drop or reject unknown ones with 400.
+**Fixed:** unknown terms are not result columns and are dropped (SEC-2), like DRF's `OrderingFilter` does.
+Test: `test_unknown_ordering_field_is_ignored`.
 
 ## BUG-4 `count` assumes a primary key named `id`
 

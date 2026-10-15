@@ -44,6 +44,7 @@ Layout:
 | `tests/test_filtering.py` | View filters before and value filters after aggregation |
 | `tests/test_ordering.py` | `ordering` on the aggregated result |
 | `tests/test_customization.py` | Custom name, serializer, pagination |
+| `tests/test_security.py` | Field allowlist, ordering restricted to result columns, `group_by` limit |
 
 Without `ordering` the row order of an aggregation is not defined: SQLite happens to return rows sorted by the
 group columns, PostgreSQL and SQL Server need not. Every test that expects several rows therefore passes an
@@ -54,7 +55,7 @@ Known weak spots, to be reworked later:
 
 - Fixtures are created per test in `setUp` and URLs are hard-coded (`/book/aggregation/`).
 
-State on 2026-10-15: all 31 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
+State on 2026-10-15: all 37 tests pass on Python 3.14 with Django 6.1.2, DRF 3.18.3, django-filter 26.2
 (SQLite 3.46), also with `--shuffle`, `--reverse` and `-W error::DeprecationWarning`. CI runs the other
 combinations.
 

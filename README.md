@@ -32,6 +32,7 @@ The documentation is split into small linked notes in [`Readme/`](Readme/).
 - [Grouping](Readme/grouping.md): `group_by`, relation paths, multiple fields
 - [Filtering](Readme/filtering.md): filtering before and after aggregation, value FilterSets
 - [Ordering](Readme/ordering.md): `ordering`, allowed fields, pitfalls
+- [Field access](Readme/field-access.md): which fields `group_by` / `aggregation_field` may use, limits
 - [Customization](Readme/customization.md): value name, serializer, pagination, overridable hooks
 - [View attributes](Readme/view-attributes.md): reference of all class attributes
 

@@ -12,7 +12,7 @@ The type check uses the field's `get_internal_type()`. All built-in integer fiel
 `Positive*` and `*AutoField` variants); `DurationField` and `TimeField` are currently rejected
 ([BUG-5](issues.md#bug-5-numeric-type-check-is-too-narrow)).
 
-`aggregation_field` can be:
+`aggregation_field` can be any of the following, as far as the view allows it ([Field access](field-access.md)):
 
 - a model field: `aggregation_field=price`
 - a field on a related model, using `__`: `aggregation_field=author__age`

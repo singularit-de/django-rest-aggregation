@@ -50,5 +50,7 @@ These methods on `AggregationMixin` can be overridden:
 | `filter_aggregated_queryset(queryset)` | Filtering after aggregation |
 | `order_aggregated_queryset(queryset)` | Ordering after aggregation |
 | `remove_invalid_ordering_fields(queryset, fields)` | Ordering allowlist |
+| `get_aggregation_fields()` | Fields allowed in `group_by` / `aggregation_field` ([Field access](field-access.md)) |
+| `get_aggregation_max_group_by()` | Maximum number of `group_by` fields |
 
 Related: [View attributes](view-attributes.md) · [Architecture](architecture.md)
