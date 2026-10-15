@@ -66,7 +66,6 @@ combinations.
 
 - `test`: Python 3.10–3.14 × Django 5.2 / 6.0 / 6.1 (Django 6.x only on 3.12+) on SQLite, with
   `-W error::DeprecationWarning` so Django deprecations fail early.
-- `test-lowest`: Python 3.10 with the lowest declared versions (`--resolution lowest-direct`).
 - `test-postgres`: lowest and latest combination against a PostgreSQL 17 service.
 - `test-mssql`: the same two combinations against a SQL Server 2022 service. The test settings use
   mssql-django's `mssql_python` driver, which ships ODBC Driver 18, so no system ODBC packages are needed.
@@ -90,7 +89,7 @@ Ruff runs in two places, both with the version pinned in `uv.lock`:
 Test other versions without touching `.venv`:
 
 ```bash
-uv run --isolated --python 3.10 --resolution lowest-direct runtests.py   # lowest supported versions
+uv run --isolated --python 3.10 --resolution lowest-direct runtests.py   # lowest supported versions (no CI job)
 uv run --isolated --with "django<6" runtests.py                          # Django 5.2
 ```
 

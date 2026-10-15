@@ -60,7 +60,7 @@ uv run ruff check . && uv run ruff format .   # line length 120 (ruff.toml); als
   Maintenance priority: SEC-1, BUG-1, BUG-2.
 - Behaviour changes need a test in the matching `tests/test_<topic>.py` (test app models: `Agent`, `Author`,
   `Book`, `Store`; ViewSets in `tests/testapp/views.py`).
-- CI (`ci.yml`, every push) runs ruff and the tests (Python × Django matrix, lowest deps, PostgreSQL, SQL Server).
+- CI (`ci.yml`, every push) runs ruff and the tests (Python × Django matrix, PostgreSQL, SQL Server).
 - Release: bump `version` in `pyproject.toml`, publish a GitHub release → `publish.yml` runs `ci.yml` on the
   release tag and uploads to PyPI only if it passes. Saving a draft release does not trigger it.
 - Commit style: conventional prefixes (`feat:`, `fix:`, `chore:`, `refactor:`, `test:`).
