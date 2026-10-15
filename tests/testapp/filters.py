@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from .models import Book, Author
+from .models import Author, Book
 
 
 class BookFilter(filters.FilterSet):

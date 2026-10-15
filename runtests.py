@@ -1,25 +1,19 @@
 #!/usr/bin/env python
+"""Run the test suite with Django's test runner.
+
+All arguments are passed to ``manage.py test``, for example:
+
+    uv run runtests.py
+    uv run runtests.py tests.test_validation --failfast
+    uv run runtests.py --shuffle --parallel auto
+    DB_BACKEND=postgres uv run runtests.py
+"""
+
 import os
 import sys
 
-import django
-from django.conf import settings
-from django.test.utils import get_runner
+from django.core.management import execute_from_command_line
 
 if __name__ == "__main__":
-    os.environ["DJANGO_SETTINGS_MODULE"] = "tests.settings"
-    django.setup()
-
-    # cov = Coverage(source=["src"])
-    # cov.start()
-
-    TestRunner = get_runner(settings)
-    test_runner = TestRunner()
-    failures = test_runner.run_tests(["tests"])
-
-    # cov.stop()
-    # cov.save()
-    # cov.report()
-    # cov.html_report()
-
-    sys.exit(bool(failures))
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
+    execute_from_command_line([sys.argv[0], "test", *sys.argv[1:]])
